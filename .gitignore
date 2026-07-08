@@ -1,0 +1,35 @@
+# Generated outputs
+dist/
+
+# Local working data
+workspace/*
+!workspace/README.md
+local/
+secrets/
+
+# Credentials and machine-local config
+.env
+.env.*
+*.key
+*.pem
+*.pfx
+*.p12
+*_secret.*
+*secrets*
+
+# Archives and temporary files
+*.zip
+*.tmp
+*.bak
+
+# Python tooling
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Logs
+*.log
+
+# Private raw chat exports
+*ChatGPT*.md
+chat_exports/

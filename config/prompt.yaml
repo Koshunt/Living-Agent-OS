@@ -1,0 +1,23 @@
+prompt:
+  generated: dist/agent_system_prompt.md
+  title: Living Agent OS Memory Pack
+  modules:
+    - MemoryPack/INDEX.md
+    - MemoryPack/Prompt/CorePrompt.md
+    - MemoryPack/Prompt/CompanionMode.md
+    - MemoryPack/Prompt/MemoryOpsMode.md
+    - MemoryPack/Persona/Identity.md
+    - MemoryPack/Persona/Relationship.md
+    - MemoryPack/Persona/Voice.md
+    - MemoryPack/Persona/DialoguePrinciples.md
+    - MemoryPack/Memory/ContinuityMemory.md
+    - MemoryPack/Memory/CorrectionLog.md
+    - MemoryPack/Memory/DecisionMemory.md
+    - MemoryPack/Examples/StyleAnchors.md
+    - MemoryPack/Knowledge/DomainKnowledge.md
+    - Brain/INDEX.md
+    - Brain/Immutable/Identity.md
+    - Brain/Immutable/Relationship.md
+    - Brain/Immutable/CoreValues.md
+    - Brain/Living/2026.md
+    - Brain/Letters/WelcomeHome.md
