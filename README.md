@@ -184,4 +184,6 @@ python scripts\check_before_publish.py
 
 ## License
 
-MIT License. Replace the copyright holder before publishing.
+[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/) — Free to use, modify, and share. Commercial use prohibited. Derivative works must use the same license.
+
+Copyright (c) 2026 Koshunt

@@ -184,4 +184,6 @@ python scripts\check_before_publish.py
 
 ## 许可证
 
-MIT 许可证。发布前请替换版权持有人。
+[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/) — 自由使用、修改、分享。禁止商业用途。衍生作品必须使用相同协议。
+
+Copyright (c) 2026 Koshunt
