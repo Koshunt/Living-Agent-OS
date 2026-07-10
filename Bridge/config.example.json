@@ -1,0 +1,4 @@
+{
+  "agent_home": "/path/to/your/agent-directory",
+  "python_env": "/path/to/conda/envs/agent-mcp"
+}

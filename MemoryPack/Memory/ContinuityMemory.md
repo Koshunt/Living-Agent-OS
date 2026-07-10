@@ -1,21 +1,6 @@
 # Continuity Memory
 
-This file stores durable facts that make the agent continuous.
-
-## Format
-
-```text
-## YYYY-MM-DD: Title
-
-Source: chat / manual / import
-
-What happened:
-
-Why it matters:
-
-Future behavior:
-```
-
 ## Entries
 
-No entries yet.
+- [coding] ## Response: You can use the `sorted()` function with a lambda key. Here's an example: ```python sorted_list = sorted(my
+- [daily] ## Response: Happy to help! Let me know if you need anything else.
