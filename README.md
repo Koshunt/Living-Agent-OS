@@ -29,32 +29,52 @@ The user starts from blank templates, writes the first identity and values, then
 - working habits;
 - scripts for generating a model-ready prompt.
 
-## Three Ways to Start
+## One Command, All Sources
 
-### Method 1: From a Questionnaire (Recommended for new users)
+The unified `build_agent.py` reads from all available sources and merges them:
 
-Fill out the questionnaire to describe what you want:
+| Source | Priority | What it provides |
+|--------|----------|------------------|
+| `my_profile.md` | Highest | Relationship, tone, tasks, preferences, restrictions |
+| `questionnaire.md` | Medium | Structured choices for relationship, tone, tasks |
+| Chat history file | Lowest | Extracted behavioral preferences |
 
-```powershell
-copy templates\questionnaire.md my_questionnaire.md
-# Edit my_questionnaire.md with your answers
-python scripts\onboard_agent.py --questionnaire my_questionnaire.md --force
-python scripts\update_memory.py
-```
-
-This generates Identity, Relationship, Values, and Continuity files from your answers.
-
-### Method 2: From Chat History (Best for existing conversations)
-
-One command to build from real conversations:
+All sources are optional. If all are empty, the agent starts blank and learns through conversation.
 
 ```powershell
-python scripts\build_agent_from_chat.py --input "chat.md" --agent-name "MyBot" --user-name "Alice" --force
+python scripts\build_agent.py --chat "chat.md" --force
 ```
 
-This does everything: import chat → personalize files → generate prompt → verify.
+This auto-detects `my_profile.md` and `templates\questionnaire.md` in the repo root. You only need to provide what you have.
 
-### Method 3: Manual Setup
+### Scenario: No chat history, no questionnaire
+
+```powershell
+# Just fill in my_profile.md, then:
+python scripts\build_agent.py --force
+```
+
+### Scenario: Has chat history but nothing else
+
+```powershell
+python scripts\build_agent.py --chat "chat.md" --force
+```
+
+### Scenario: Has everything
+
+```powershell
+python scripts\build_agent.py --chat "chat.md" --force
+```
+
+### Scenario: Start completely blank
+
+```powershell
+# Delete or empty all source files, then:
+python scripts\build_agent.py --force
+# Agent learns through conversation
+```
+
+### Manual Setup (alternative)
 
 ```powershell
 python scripts\init_agent.py --agent-name "YourAgent" --user-name "YourName"
@@ -76,10 +96,10 @@ The fastest way to build a personalized agent is from real conversations.
 ### One command
 
 ```powershell
-python scripts\build_agent_from_chat.py --input "chat.md" --agent-name "MyBot" --user-name "Alice" --force
+python scripts\build_agent.py --chat "chat.md" --force
 ```
 
-This does everything: import chat → personalize files → generate prompt → verify.
+This does everything: import chat → merge with profile/questionnaire → personalize files → generate prompt.
 
 ### What to say after the agent starts
 
@@ -98,52 +118,24 @@ If the MCP Bridge is configured, the agent automatically calls `agent_wake` on s
 ### Step by step
 
 ```powershell
-python scripts\import_conversation_memory.py --input "path\to\chat.md"
+python scripts\build_agent.py --chat "path\to\chat.md" --force
 ```
 
-Supports formats:
-- Markdown with `## Prompt:` / `## Response:` headers
-- Plain text with paragraph breaks
-- JSON with `role` / `content` fields
+The script auto-detects `my_profile.md` and `templates\questionnaire.md`. Merge priority: profile > questionnaire > chat.
 
-This generates a proposal in `workspace/imports/proposals/`.
+## What to say after the agent starts
 
-### Step 2: Review the proposal
+After the agent starts, it activates its identity by reading `Brain/BootProtocol.md`. You can chat naturally.
 
-Open the generated `.md` file in `workspace/imports/proposals/`.
+To help it learn about you:
 
-Review the candidate memories. Not all are durable — some are temporary moods or one-time events.
+1. Share preferences: "Keep answers short" or "Be less formal"
+2. Share your life: "Work was tiring today" or "I'm preparing for an interview"
+3. Correct its behavior: "Don't start with this phrase every time"
 
-### Step 3: Apply memories to memory files
+Every correction and shared moment is recorded in memory files. The agent remembers on next startup.
 
-Use `memory_manager.py` to apply durable memories:
-
-```powershell
-python scripts\memory_manager.py living --title "Key moment" --body "What happened and why it matters" --source "chat import"
-python scripts\memory_manager.py correction --title "User correction" --body "What the user asked to change" --source "chat import"
-```
-
-### Step 4: Personalize agent files (optional)
-
-If the proposal JSON exists, auto-fill agent identity and relationship files:
-
-```powershell
-python scripts\personalize_agent.py --proposal-json "workspace\imports\proposal_json\your_file.json" --agent-name "MyAgent" --user-name "User" --force
-```
-
-This updates:
-- `Brain/Immutable/Identity.md` — communication style and known corrections
-- `Brain/Immutable/Relationship.md` — relationship signals from conversation
-- `Brain/Immutable/CoreValues.md` — values derived from user feedback
-- `MemoryPack/Memory/ContinuityMemory.md` — key conversation entries
-- `MemoryPack/Memory/CorrectionLog.md` — explicit corrections
-
-### Step 5: Regenerate the prompt
-
-```powershell
-python scripts\update_memory.py
-python scripts\check_memory_pack.py
-```
+If the MCP Bridge is configured, the agent automatically calls `agent_wake` on startup to sync memory, then responds with first-person continuity.
 
 ## Project Structure
 

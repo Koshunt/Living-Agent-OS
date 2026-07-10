@@ -29,30 +29,52 @@
 - 工作习惯
 - 用于生成模型可用 Prompt 的脚本
 
-## 三种启动方式
+## 一条命令，三种来源
 
-### 方式一：填写问卷（推荐新用户）
+统一的 `build_agent.py` 会自动读取所有可用来源并合并：
 
-填写问卷，描述你想要的 Agent：
+| 来源 | 优先级 | 提供什么 |
+|------|--------|----------|
+| `my_profile.md` | 最高 | 关系、语气、任务、偏好、禁忌 |
+| `questionnaire.md` | 中等 | 结构化的关系、语气、任务选择 |
+| 聊天记录 | 最低 | 从对话中提取的行为偏好 |
 
-```powershell
-copy templates\questionnaire.md 我的问卷.md
-# 用记事本编辑"我的问卷.md"，回答里面的问题
-python scripts\onboard_agent.py --questionnaire "我的问卷.md" --force
-python scripts\update_memory.py
-```
-
-根据你的回答，自动生成身份、关系、价值观和记忆文件。
-
-### 方式二：从聊天记录生成（适合已有对话的用户）
+所有来源都是可选的。如果全部为空，Agent 从零开始，在对话中逐渐成长。
 
 ```powershell
-python scripts/build_agent_from_chat.py --input "聊天记录.md" --agent-name "小助手" --user-name "用户" --force
+python scripts\build_agent.py --chat "聊天记录.md" --force
 ```
 
-这条命令会自动完成：导入聊天 → 个性化文件 → 生成 Prompt → 验证。
+自动检测 `my_profile.md` 和 `templates\questionnaire.md`。有什么用什么。
 
-### 方式三：手动初始化
+### 场景：没有聊天记录，没有问卷
+
+```powershell
+# 只需要填写 my_profile.md，然后：
+python scripts\build_agent.py --force
+```
+
+### 场景：有聊天记录，没有其他
+
+```powershell
+python scripts\build_agent.py --chat "聊天记录.md" --force
+```
+
+### 场景：什么都有
+
+```powershell
+python scripts\build_agent.py --chat "聊天记录.md" --force
+```
+
+### 场景：完全从零开始
+
+```powershell
+# 清空所有来源文件，然后：
+python scripts\build_agent.py --force
+# Agent 在对话中学习成长
+```
+
+### 手动初始化（替代方式）
 
 ```powershell
 python scripts\init_agent.py --agent-name "你的Agent名" --user-name "你的名字"
@@ -74,54 +96,18 @@ dist/agent_system_prompt.md
 ### 方法一：一行命令搞定
 
 ```powershell
-python scripts\build_agent_from_chat.py --input "聊天记录.md" --agent-name "小助手" --user-name "用户" --force
+python scripts\build_agent.py --chat "聊天记录.md" --force
 ```
 
-这条命令会自动完成：导入聊天 → 个性化文件 → 生成 Prompt → 验证。
+这条命令会自动完成：导入聊天 → 合并问卷/画像 → 个性化文件 → 生成 Prompt。
 
 ### 方法二：分步操作
 
-**第 1 步：导入聊天记录**
-
 ```powershell
-python scripts\import_conversation_memory.py --input "聊天记录.md"
+python scripts\build_agent.py --chat "聊天记录.md" --force
 ```
 
-支持的格式：
-- Markdown，含 `## Prompt:` / `## Response:` 标题
-- 纯文本，按段落分割
-- JSON，含 `role` / `content` 字段
-
-**第 2 步：查看提案**
-
-打开 `workspace/imports/proposals/` 下生成的 `.md` 文件，查看候选记忆。
-
-**第 3 步：应用持久化记忆**
-
-```powershell
-python scripts\memory_manager.py living --title "关键事件" --body "发生了什么以及为什么重要" --source "聊天导入"
-python scripts\memory_manager.py correction --title "用户修正" --body "用户要求改变什么" --source "聊天导入"
-```
-
-**第 4 步：个性化 Agent 文件**
-
-```powershell
-python scripts\personalize_agent.py --proposal-json "workspace\imports\proposal_json\你的文件.json" --agent-name "小助手" --user-name "用户" --force
-```
-
-会自动更新：
-- `Brain/Immutable/Identity.md` — 沟通风格和已知修正
-- `Brain/Immutable/Relationship.md` — 从对话中提取的关系信号
-- `Brain/Immutable/CoreValues.md` — 从用户反馈推导的价值观
-- `MemoryPack/Memory/ContinuityMemory.md` — 关键对话条目
-- `MemoryPack/Memory/CorrectionLog.md` — 明确的修正
-
-**第 5 步：重新生成 Prompt**
-
-```powershell
-python scripts\update_memory.py
-python scripts\check_memory_pack.py
-```
+脚本自动检测 `my_profile.md` 和 `templates\questionnaire.md`。合并优先级：画像 > 问卷 > 聊天。
 
 ## 启动后给什么指令
 
