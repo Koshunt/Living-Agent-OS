@@ -151,6 +151,25 @@ Living-Agent-OS/
 
 ---
 
+## 在新电脑上让 Agent 帮你一键安装
+
+如果你在新电脑上同步了代码，可以对 Agent 说这句话：
+
+> **我刚在新电脑上 git pull 了最新代码，请帮我一键配置 CC Switch Bridge。**
+
+Agent 会自动完成安装。但如果这是第一次配置（CC Switch 还没接入），需要手动做一次初始连接：
+
+```powershell
+cd Bridge
+copy config.example.json config.json
+# 用记事本编辑 config.json，填上你的本地路径和 Python 环境路径
+.\setup.ps1
+```
+
+跑完后，把生成的 `ccswitch-mcp-config.json` 粘贴到 CC Switch → MCP → + → 自定义 中。之后所有安装都可以交给 Agent 了。
+
+---
+
 ## CC Switch 集成
 
 如果你用 CC Switch 配合 OpenCode、Codex 或 Claude，Bridge 目录可以把你的 Agent 接入 IDE。

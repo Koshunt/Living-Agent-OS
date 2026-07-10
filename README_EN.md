@@ -151,6 +151,25 @@ Living-Agent-OS/
 
 ---
 
+## Help Me Install on a New Machine
+
+If you've synced the code to a new machine, say this to your agent:
+
+> **I just git pulled the latest code on a new machine. Please help me configure the CC Switch Bridge.**
+
+The agent will handle it. But if this is the first setup (CC Switch not connected yet), do the initial connection manually:
+
+```powershell
+cd Bridge
+copy config.example.json config.json
+# Edit config.json with your local paths and Python env
+.\setup.ps1
+```
+
+After it finishes, paste the generated `ccswitch-mcp-config.json` into CC Switch → MCP → + → Custom. Everything after that can be done by the agent.
+
+---
+
 ## CC Switch Integration
 
 If you use CC Switch with OpenCode, Codex, or Claude, the Bridge directory connects your agent to your IDE.
