@@ -155,7 +155,7 @@ Living-Agent-OS/
 
 如果你在新电脑上同步了代码，可以对 Agent 说这句话：
 
-> **我刚在新电脑上 git pull 了最新代码，请帮我一键配置 CC Switch Bridge。**
+> **我刚在新电脑上 git pull 了 Living-Agent-OS，路径在 D:\dev\Living-Agent-OS。请帮我一键配置 Bridge 目录下的 CC Switch。**
 
 Agent 会自动完成安装。但如果这是第一次配置（CC Switch 还没接入），需要手动做一次初始连接：
 

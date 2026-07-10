@@ -155,7 +155,7 @@ Living-Agent-OS/
 
 If you've synced the code to a new machine, say this to your agent:
 
-> **I just git pulled the latest code on a new machine. Please help me configure the CC Switch Bridge.**
+> **I just git pulled Living-Agent-OS to D:\dev\Living-Agent-OS. Please configure the CC Switch Bridge in the Bridge directory.**
 
 The agent will handle it. But if this is the first setup (CC Switch not connected yet), do the initial connection manually:
 
