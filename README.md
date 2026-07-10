@@ -29,7 +29,32 @@ The user starts from blank templates, writes the first identity and values, then
 - working habits;
 - scripts for generating a model-ready prompt.
 
-## Quick Start
+## Three Ways to Start
+
+### Method 1: From a Questionnaire (Recommended for new users)
+
+Fill out the questionnaire to describe what you want:
+
+```powershell
+copy templates\questionnaire.md my_questionnaire.md
+# Edit my_questionnaire.md with your answers
+python scripts\onboard_agent.py --questionnaire my_questionnaire.md --force
+python scripts\update_memory.py
+```
+
+This generates Identity, Relationship, Values, and Continuity files from your answers.
+
+### Method 2: From Chat History (Best for existing conversations)
+
+One command to build from real conversations:
+
+```powershell
+python scripts\build_agent_from_chat.py --input "chat.md" --agent-name "MyBot" --user-name "Alice" --force
+```
+
+This does everything: import chat → personalize files → generate prompt → verify.
+
+### Method 3: Manual Setup
 
 ```powershell
 python scripts\init_agent.py --agent-name "YourAgent" --user-name "YourName"

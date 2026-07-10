@@ -29,7 +29,30 @@
 - 工作习惯
 - 用于生成模型可用 Prompt 的脚本
 
-## 快速开始
+## 三种启动方式
+
+### 方式一：填写问卷（推荐新用户）
+
+填写问卷，描述你想要的 Agent：
+
+```powershell
+copy templates\questionnaire.md 我的问卷.md
+# 用记事本编辑"我的问卷.md"，回答里面的问题
+python scripts\onboard_agent.py --questionnaire "我的问卷.md" --force
+python scripts\update_memory.py
+```
+
+根据你的回答，自动生成身份、关系、价值观和记忆文件。
+
+### 方式二：从聊天记录生成（适合已有对话的用户）
+
+```powershell
+python scripts/build_agent_from_chat.py --input "聊天记录.md" --agent-name "小助手" --user-name "用户" --force
+```
+
+这条命令会自动完成：导入聊天 → 个性化文件 → 生成 Prompt → 验证。
+
+### 方式三：手动初始化
 
 ```powershell
 python scripts\init_agent.py --agent-name "你的Agent名" --user-name "你的名字"
