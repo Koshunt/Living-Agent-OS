@@ -22,10 +22,11 @@ cd Bridge
 .\setup.ps1
 ```
 
-脚本会做三件事：
-1. 创建 `config.json`，写入你的本地路径
-2. 生成 `ccswitch-mcp-config.json`，给 CC Switch 用
-3. 显示接下来的操作提示
+脚本会自动：
+1. 创建本地 Python 虚拟环境（`.venv/`）
+2. 安装 MCP 依赖
+3. 运行测试
+4. 生成 `ccswitch-mcp-config.json`
 
 如果脚本报错，先检查 Python 是否装好：`python --version`
 

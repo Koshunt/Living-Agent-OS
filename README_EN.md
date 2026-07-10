@@ -172,12 +172,14 @@ After it finishes, paste the generated `ccswitch-mcp-config.json` into CC Switch
 
 ## CC Switch Integration
 
-If you use CC Switch with OpenCode, Codex, or Claude, the Bridge directory connects your agent to your IDE.
+If you use CC Switch with OpenCode, Codex, or Claude, one command sets everything up:
 
 ```powershell
 cd Bridge
 .\setup.ps1
 ```
+
+It auto-creates a local venv, installs dependencies, runs tests, and generates the MCP config.
 
 See [Bridge/CCSwitch-Guide_EN.md](Bridge/CCSwitch-Guide_EN.md) for step-by-step instructions.
 

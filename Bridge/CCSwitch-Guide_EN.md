@@ -22,10 +22,11 @@ cd Bridge
 .\setup.ps1
 ```
 
-The script does three things:
-1. Creates `config.json` with your local paths
-2. Generates `ccswitch-mcp-config.json` for CC Switch
-3. Shows you the next steps
+The script automatically:
+1. Creates a local Python venv (`.venv/`)
+2. Installs MCP dependencies
+3. Runs tests
+4. Generates `ccswitch-mcp-config.json`
 
 If the script fails, check that Python is installed: `python --version`
 

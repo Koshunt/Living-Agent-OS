@@ -157,29 +157,26 @@ Living-Agent-OS/
 
 > **我刚在新电脑上 git pull 了 Living-Agent-OS，路径在 D:\dev\Living-Agent-OS。请帮我一键配置 Bridge 目录下的 CC Switch。**
 
-Agent 会自动完成安装。但如果这是第一次配置（CC Switch 还没接入），需要手动做一次初始连接：
+Agent 会自动完成：创建虚拟环境 → 装依赖 → 跑测试 → 生成 MCP 配置。
 
-```powershell
-cd Bridge
-copy config.example.json config.json
-# 用记事本编辑 config.json，填上你的本地路径和 Python 环境路径
-.\setup.ps1
-```
+但如果这是第一次配置（CC Switch 还没接入），需要手动粘一次配置文件：
 
-跑完后，把生成的 `ccswitch-mcp-config.json` 粘贴到 CC Switch → MCP → + → 自定义 中。之后所有安装都可以交给 Agent 了。
+跑完 `setup.ps1` 后，把生成的 `ccswitch-mcp-config.json` 粘贴到 CC Switch → MCP → + → 自定义 中。之后所有安装都可以交给 Agent 了。
 
 ---
 
 ## CC Switch 集成
 
-如果你用 CC Switch 配合 OpenCode、Codex 或 Claude，Bridge 目录可以把你的 Agent 接入 IDE。
+如果你用 CC Switch 配合 OpenCode、Codex 或 Claude，一条命令搞定：
 
 ```powershell
 cd Bridge
 .\setup.ps1
 ```
 
-see [Bridge/CCSwitch-Guide.md](Bridge/CCSwitch-Guide.md) 了解详细步骤。
+脚本会自动创建虚拟环境、安装依赖、跑测试、生成 MCP 配置。
+
+详细步骤见 [Bridge/CCSwitch-Guide.md](Bridge/CCSwitch-Guide.md)。
 
 ---
 

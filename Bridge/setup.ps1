@@ -3,8 +3,8 @@
     One-click setup for Agent OS CC Switch Bridge.
 
 .DESCRIPTION
-    Reads config.json, creates Conda environment, installs dependencies,
-    runs tests, and generates the CC Switch MCP configuration.
+    Creates a local Python venv, installs dependencies, runs tests,
+    and generates CC Switch MCP config. No Conda needed.
 
 .EXAMPLE
     .\setup.ps1
@@ -17,71 +17,69 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 $bridge = Split-Path -Parent $MyInvocation.MyCommand.Path
-$configPath = Join-Path $bridge "config.json"
+$agentHome = Split-Path $bridge -Parent
+$venvDir = Join-Path $bridge ".venv"
+$venvPython = Join-Path $venvDir "Scripts\python.exe"
+$venvPip = Join-Path $venvDir "Scripts\pip.exe"
 
 Write-Host ""
 Write-Host "=== Agent OS CC Switch Bridge Setup ===" -ForegroundColor Cyan
 Write-Host ""
 
-# --- Step 1: Read config ---
-Write-Host "[1/5] Reading config.json..." -ForegroundColor Yellow
-if (-not (Test-Path -LiteralPath $configPath)) {
-    Write-Host "config.json not found. Creating from template..." -ForegroundColor Yellow
-    $template = Get-Content -LiteralPath (Join-Path $bridge "config.example.json") -Raw
-    Set-Content -LiteralPath $configPath -Value $template -Encoding UTF8
-    Write-Host "Please edit config.json with your actual paths, then run setup.ps1 again." -ForegroundColor Red
-    exit 1
-}
-
-$config = Get-Content -LiteralPath $configPath -Raw | ConvertFrom-Json
-$homePath = $config.agent_home
-$envPrefix = $config.python_env
-$envPython = Join-Path $envPrefix "python.exe"
-
-Write-Host "  agent_home: $homePath"
-Write-Host "  Python env: $envPrefix"
-
-# --- Step 2: Validate paths ---
-Write-Host ""
-Write-Host "[2/5] Validating paths..." -ForegroundColor Yellow
-if (-not (Test-Path -LiteralPath (Join-Path $homePath "Brain\BootProtocol.md"))) {
-    throw "Agent OS not found at: $homePath"
+Write-Host "[1/5] Detecting paths..." -ForegroundColor Yellow
+Write-Host "  Agent OS: $agentHome"
+Write-Host "  Bridge:   $bridge"
+if (-not (Test-Path -LiteralPath (Join-Path $agentHome "Brain\BootProtocol.md"))) {
+    throw "Agent OS not found at: $agentHome"
 }
 Write-Host "  Agent OS repository: OK"
 
-# --- Step 3: Create Conda environment ---
+# --- Step 2: Create venv ---
 Write-Host ""
-Write-Host "[3/5] Setting up Python environment..." -ForegroundColor Yellow
-if (-not (Get-Command conda -ErrorAction SilentlyContinue)) {
-    throw "Conda is not installed or not in PATH."
-}
-if (-not (Test-Path -LiteralPath $envPython)) {
-    Write-Host "  Creating Conda environment at $envPrefix..."
-    conda create --prefix $envPrefix python=3.12 pip -y
-    if ($LASTEXITCODE -ne 0) { throw "Failed to create Conda environment." }
+Write-Host "[2/5] Creating local Python environment..." -ForegroundColor Yellow
+if (-not (Test-Path -LiteralPath $venvPython)) {
+    $py = Get-Command python -ErrorAction SilentlyContinue
+    if (-not $py) {
+        throw "Python is not installed or not in PATH. Install Python 3.10+ from https://python.org"
+    }
+    $version = & python --version
+    Write-Host "  Found: $version"
+    Write-Host "  Creating .venv at $venvDir..."
+    & python -m venv $venvDir
+    if ($LASTEXITCODE -ne 0) { throw "Failed to create virtual environment." }
 } else {
-    Write-Host "  Conda environment already exists."
+    Write-Host "  Virtual environment already exists."
 }
 
-# --- Step 4: Install dependencies ---
+# --- Step 3: Install dependencies ---
 Write-Host ""
-Write-Host "[4/5] Installing dependencies..." -ForegroundColor Yellow
-& $envPython -m pip install -r (Join-Path $bridge "requirements.txt") --quiet
+Write-Host "[3/5] Installing dependencies..." -ForegroundColor Yellow
+& $venvPip install -r (Join-Path $bridge "requirements.txt") --quiet
 if ($LASTEXITCODE -ne 0) { throw "Failed to install dependencies." }
 Write-Host "  Dependencies installed."
+
+# --- Step 4: Run tests ---
+Write-Host ""
+Write-Host "[4/5] Running tests..." -ForegroundColor Yellow
+& $venvPython (Join-Path $bridge "test_bridge.py")
+if ($LASTEXITCODE -ne 0) { throw "Bridge tests failed." }
+& $venvPython -m py_compile (Join-Path $bridge "server.py")
+if ($LASTEXITCODE -ne 0) { throw "Server syntax check failed." }
+& $venvPython (Join-Path $bridge "test_mcp_protocol.py")
+if ($LASTEXITCODE -ne 0) { throw "MCP protocol test failed." }
+Write-Host "  All tests passed."
 
 # --- Step 5: Generate CC Switch config ---
 Write-Host ""
 Write-Host "[5/5] Generating CC Switch MCP config..." -ForegroundColor Yellow
-$serverPy = Join-Path $bridge "server.py"
 $mcpConfig = @{
-    server_id = "agent"
-    name      = "Agent OS"
+    server_id   = "agent"
+    name        = "Agent OS"
     description = "Wake agent, sync Git memory, retrieve dynamic context."
-    transport = "stdio"
-    command   = $envPython
-    args      = @($serverPy)
-    env       = @{}
+    transport   = "stdio"
+    command     = $venvPython
+    args        = @((Join-Path $bridge "server.py"))
+    env         = @{}
 } | ConvertTo-Json -Depth 3
 $mcpConfigPath = Join-Path $bridge "ccswitch-mcp-config.json"
 Set-Content -LiteralPath $mcpConfigPath -Value $mcpConfig -Encoding UTF8
