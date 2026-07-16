@@ -122,7 +122,7 @@ Write-Host "  Profile saved to: $profilePath" -ForegroundColor Green
 Write-Host "`n--- Bridge Setup ---" -ForegroundColor Green
 $runBridge = Read-Host "  Run Bridge setup now? (Y/n)"
 if ($runBridge -eq "" -or $runBridge -eq "y" -or $runBridge -eq "Y") {
-    $bridgeSetup = Join-Path $agentHome "Bridge\setup.ps1"
+    $bridgeSetup = Join-Path (Join-Path $agentHome "Bridge") "setup.ps1"
     if (Test-Path -LiteralPath $bridgeSetup) {
         Write-Host "  Running Bridge setup..." -ForegroundColor Yellow
         & $bridgeSetup

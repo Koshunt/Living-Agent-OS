@@ -14,6 +14,16 @@ This template is the result of that work. It's yours now.
 
 ---
 
+## System Requirements
+
+| Requirement | Details |
+|-------------|---------|
+| **OS** | Windows 10/11 or Ubuntu 20.04+ |
+| **Python** | 3.10+ (auto-downloads embedded Python on Windows if missing) |
+| **Git** | Required on both platforms |
+
+---
+
 ## Quick Start (1 minute)
 
 ### Way 1: Throw it at your AI (recommended)
@@ -36,16 +46,26 @@ Every new session after that, the AI will wake up with full memory continuity.
 
 ### Way 2: Manual setup
 
+**Windows：**
 ```powershell
 cd Bridge
 .\setup.ps1
 ```
 
+**Ubuntu：**
+```bash
+cd Bridge
+pwsh setup.ps1
+# Install PowerShell first: sudo snap install powershell --classic
+```
+
 After setup completes:
-1. Copy the contents of `Bridge\Agent-Bootstrap-Prompt.md` into your AI client's System Prompt
-2. Configure MCP with `Bridge\.venv\Scripts\python.exe` as command and `Bridge\server.py` as argument
-3. Run `.\scripts\setup_wizard.ps1` to create your personal profile
-4. Run `python scripts\build_agent.py --force` to generate identity files
+1. Copy the contents of `Bridge/Agent-Bootstrap-Prompt.md` into your AI client's System Prompt
+2. Configure MCP (paths depend on your OS):
+   - Windows: command `Bridge\.venv\Scripts\python.exe`, args `Bridge\server.py`
+   - Linux:   command `Bridge/.venv/bin/python3`,        args `Bridge/server.py`
+3. Run `pwsh scripts/setup_wizard.ps1` to create your personal profile
+4. Run `python scripts/build_agent.py --force` to generate identity files
 
 ---
 
@@ -66,7 +86,8 @@ Living-Agent-OS/
 │   ├── server.py             # MCP service (auto-installs dependencies)
 │   ├── bridge_core/          # Core logic
 │   ├── setup.ps1             # One-click env setup
-│   ├── run_mcp.cmd           # Launch the MCP server
+│   ├── run_mcp.cmd           # Launch the MCP server (Windows)
+│   ├── run_mcp.sh            # Launch the MCP server (Linux)
 │   └── Agent-Bootstrap-Prompt.md  # Agent startup instructions
 ├── my_profile.md             # Your profile (fill this!)
 └── dist/                     # Generated prompt output

@@ -17,21 +17,19 @@ def _bootstrap_deps() -> None:
     if not missing:
         return
     req_file = Path(__file__).resolve().parent / "requirements.txt"
-    if req_file.is_file():
-        cmd = [
-            sys.executable,
-            "-m",
-            "pip",
-            "install",
-            "-r",
-            str(req_file),
-            "--quiet",
-            "--no-warn-script-location",
-        ]
-        subprocess.check_call(cmd)
-    else:
-        cmd = [sys.executable, "-m", "pip", "install", *missing, "--quiet", "--no-warn-script-location"]
-        subprocess.check_call(cmd)
+    cmd = (
+        [sys.executable, "-m", "pip", "install", "-r", str(req_file), "--quiet", "--no-warn-script-location"]
+        if req_file.is_file()
+        else [sys.executable, "-m", "pip", "install", *missing, "--quiet", "--no-warn-script-location"]
+    )
+    try:
+        subprocess.check_call(cmd, timeout=120)
+    except subprocess.TimeoutExpired:
+        print("pip install timed out. Run Bridge/setup.ps1 manually.", file=sys.stderr)
+        sys.exit(1)
+    except subprocess.CalledProcessError:
+        print("pip install failed. Run Bridge/setup.ps1 manually.", file=sys.stderr)
+        sys.exit(1)
 
 
 _bootstrap_deps()

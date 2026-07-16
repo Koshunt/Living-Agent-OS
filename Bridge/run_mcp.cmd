@@ -4,7 +4,7 @@ set "BRIDGE_DIR=%~dp0"
 
 :: Prefer .venv if it exists
 if exist "%BRIDGE_DIR%.venv\Scripts\python.exe" (
-  " %BRIDGE_DIR%.venv\Scripts\python.exe" "%BRIDGE_DIR%server.py"
+  "%BRIDGE_DIR%.venv\Scripts\python.exe" "%BRIDGE_DIR%server.py"
   exit /b %errorlevel%
 )
 

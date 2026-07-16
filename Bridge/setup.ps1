@@ -1,13 +1,14 @@
 <#
 .SYNOPSIS
-    One-click setup for Agent OS Bridge.
+    One-click setup for Agent OS Bridge (Windows & Linux).
 
 .DESCRIPTION
     Detects or downloads Python, creates a local venv, installs dependencies,
     runs tests, and generates MCP config. No prior Conda needed.
 
 .EXAMPLE
-    .\setup.ps1
+    PowerShell: .\setup.ps1
+    Linux:      pwsh setup.ps1
 #>
 
 [CmdletBinding()]
@@ -16,59 +17,69 @@ param()
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$bridge = Split-Path -Parent $MyInvocation.MyCommand.Path
+# --- Detect platform ---
+$isWindows = [System.Environment]::OSVersion.Platform -eq [System.PlatformID]::Win32NT
+$venvPythonRel = if ($isWindows) { "Scripts\python.exe" } else { "bin/python3" }
+$venvPipRel   = if ($isWindows) { "Scripts\pip.exe" }    else { "bin/pip3" }
+
+$bridge  = Split-Path -Parent $MyInvocation.MyCommand.Path
 $agentHome = Split-Path $bridge -Parent
-$venvDir = Join-Path $bridge ".venv"
-$venvPython = Join-Path $venvDir "Scripts\python.exe"
-$venvPip = Join-Path $venvDir "Scripts\pip.exe"
-$reqFile = Join-Path $bridge "requirements.txt"
+$venvDir   = Join-Path $bridge ".venv"
+$venvPython = Join-Path $venvDir $venvPythonRel
+$venvPip    = Join-Path $venvDir $venvPipRel
+$reqFile    = Join-Path $bridge "requirements.txt"
 
 Write-Host ""
 Write-Host "=== Agent OS Bridge Setup ===" -ForegroundColor Cyan
+Write-Host "  Platform: $([System.Environment]::OSVersion.Platform)"
 Write-Host ""
 
 Write-Host "[1/6] Detecting paths..." -ForegroundColor Yellow
 Write-Host "  Agent OS: $agentHome"
 Write-Host "  Bridge:   $bridge"
-if (-not (Test-Path -LiteralPath (Join-Path $agentHome "Brain\BootProtocol.md"))) {
+$bootFile = Join-Path (Join-Path $agentHome "Brain") "BootProtocol.md"
+if (-not (Test-Path -LiteralPath $bootFile)) {
     throw "Agent OS not found at: $agentHome"
 }
 Write-Host "  Agent OS repository: OK"
 
-# --- Step 2: Locate or download Python ---
+# --- Step 2: Locate or install Python ---
 Write-Host ""
 Write-Host "[2/6] Locating Python..." -ForegroundColor Yellow
 $pyExe = Get-Command python3, python -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty Source
 if (-not $pyExe -or -not (Test-Path -LiteralPath $pyExe)) {
-    Write-Host "  Python not found locally. Downloading embedded Python..." -ForegroundColor Yellow
-    $url = "https://www.python.org/ftp/python/3.12.9/python-3.12.9-embed-amd64.zip"
-    $zipPath = Join-Path $bridge "python-embed.zip"
-    $pyDir = Join-Path $bridge ".python"
-    try {
-        Invoke-WebRequest -Uri $url -OutFile $zipPath -UseBasicParsing
-        Write-Host "  Downloaded embedded Python."
-        Expand-Archive -LiteralPath $zipPath -DestinationPath $pyDir -Force
-        Remove-Item -LiteralPath $zipPath -Force
-        # Make sure python.exe is found in a known location
-        $embeddedPython = Get-ChildItem -LiteralPath $pyDir -Filter "python.exe" -Recurse | Select-Object -First 1 -ExpandProperty FullName
-        if (-not $embeddedPython) { throw "Embedded Python extraction failed." }
-        $pyExe = $embeddedPython
-        Write-Host "  Embedded Python: $pyExe"
-        # Enable pip by renaming _pth file
-        Get-ChildItem -LiteralPath $pyDir -Filter "*._pth" | Rename-Item -NewName { $_.Name + ".disabled" }
-        # Download get-pip.py and install pip
-        $getPip = Join-Path $bridge "get-pip.py"
-        Invoke-WebRequest -Uri "https://bootstrap.pypa.io/get-pip.py" -OutFile $getPip -UseBasicParsing
-        & $pyExe $getPip --no-warn-script-location --quiet
-        Remove-Item -LiteralPath $getPip -Force
-    } catch {
-        Write-Host "  Embedded Python download failed: $_" -ForegroundColor Red
-        Write-Host "  Install Python 3.10+ from https://python.org and re-run setup.ps1" -ForegroundColor Yellow
-        throw $_
+    if ($isWindows) {
+        Write-Host "  Python not found. Downloading embedded Python..." -ForegroundColor Yellow
+        $url = "https://www.python.org/ftp/python/3.12.9/python-3.12.9-embed-amd64.zip"
+        $zipPath = Join-Path $bridge "python-embed.zip"
+        $pyDir = Join-Path $bridge ".python"
+        try {
+            Invoke-WebRequest -Uri $url -OutFile $zipPath -UseBasicParsing
+            Write-Host "  Downloaded embedded Python."
+            Expand-Archive -LiteralPath $zipPath -DestinationPath $pyDir -Force
+            Remove-Item -LiteralPath $zipPath -Force
+            $embeddedPython = Get-ChildItem -LiteralPath $pyDir -Filter "python.exe" -Recurse | Select-Object -First 1 -ExpandProperty FullName
+            if (-not $embeddedPython) { throw "Embedded Python extraction failed." }
+            $pyExe = $embeddedPython
+            Write-Host "  Embedded Python: $pyExe"
+            Get-ChildItem -LiteralPath $pyDir -Filter "*._pth" | Rename-Item -NewName { $_.Name + ".disabled" }
+            $getPip = Join-Path $bridge "get-pip.py"
+            Invoke-WebRequest -Uri "https://bootstrap.pypa.io/get-pip.py" -OutFile $getPip -UseBasicParsing
+            & $pyExe $getPip --no-warn-script-location --quiet
+            Remove-Item -LiteralPath $getPip -Force
+        } catch {
+            Write-Host "  Embedded Python download failed: $_" -ForegroundColor Red
+            Write-Host "  Install Python 3.10+ from https://python.org and re-run setup.ps1" -ForegroundColor Yellow
+            throw $_
+        }
+    } else {
+        Write-Host "  Python not found." -ForegroundColor Yellow
+        Write-Host "  Install it with: sudo apt install python3 python3-venv python3-pip" -ForegroundColor Yellow
+        throw "Python is required. Install it and re-run setup.ps1."
     }
 } else {
-    $version = & $pyExe --version
-    Write-Host "  Found: $version"
+    $version = & $pyExe --version 2>&1
+    Write-Host "  Found: $($version.Trim())"
 }
 
 # --- Step 3: Create venv ---
@@ -86,6 +97,10 @@ if (-not (Test-Path -LiteralPath $venvPython)) {
 # --- Step 4: Install dependencies ---
 Write-Host ""
 Write-Host "[4/6] Installing dependencies..." -ForegroundColor Yellow
+if (-not (Test-Path -LiteralPath $venvPip)) {
+    # On some Linux distros, pip may be pip3 inside venv
+    $venvPip = Join-Path $venvDir "bin/pip"
+}
 & $venvPip install -r $reqFile --quiet
 if ($LASTEXITCODE -ne 0) { throw "Failed to install dependencies." }
 Write-Host "  Dependencies installed."
@@ -118,20 +133,13 @@ $mcpConfig = @{
     name        = "Agent OS"
     description = "Wake agent, sync Git memory, retrieve dynamic context."
     transport   = "stdio"
-    command     = $venvPython
-    args        = @((Join-Path $bridge "server.py"))
+    command     = "$venvPython"
+    args        = @("$(Join-Path $bridge server.py)")
     env         = @{}
 } | ConvertTo-Json -Depth 3
 $mcpConfigPath = Join-Path $bridge "mcp-config.json"
 Set-Content -LiteralPath $mcpConfigPath -Value $mcpConfig -Encoding UTF8
 Write-Host "  Generated: $mcpConfigPath"
-
-# --- Update run_mcp.cmd to use .venv ---
-$runCmd = Join-Path $bridge "run_mcp.cmd"
-if (Test-Path -LiteralPath $runCmd) {
-    $content = Get-Content -LiteralPath $runCmd -Raw
-    $content -replace 'CONFIG.*$', 'CONFIG=%BRIDGE_DIR%config.json' | Set-Content -LiteralPath $runCmd -NoNewline
-}
 
 # --- Done ---
 Write-Host ""
@@ -140,11 +148,19 @@ Write-Host ""
 Write-Host "Next steps:"
 Write-Host "  1. Configure your AI client MCP to point to:"
 Write-Host "     Command: $venvPython"
-Write-Host "     Args:    $bridge\server.py"
+Write-Host "     Args:    $(Join-Path $bridge server.py)"
 Write-Host ""
 Write-Host "  2. (Optional) Run the setup wizard for your agent profile:"
-Write-Host "     .\setup_wizard.ps1"
+if ($isWindows) {
+    Write-Host "     .\scripts\setup_wizard.ps1"
+} else {
+    Write-Host "     pwsh scripts/setup_wizard.ps1"
+}
 Write-Host ""
 Write-Host "Quick test:"
-Write-Host '  Run: .venv\Scripts\python.exe server.py'
+if ($isWindows) {
+    Write-Host '  Run: .venv\Scripts\python.exe server.py'
+} else {
+    Write-Host '  Run: .venv/bin/python3 server.py'
+}
 Write-Host '  Then in your AI client: call agent_ping'

@@ -14,6 +14,16 @@
 
 ---
 
+## 系统需求
+
+| 需求 | 说明 |
+|------|------|
+| **操作系统** | Windows 10/11 或 Ubuntu 20.04+ |
+| **Python** | 3.10 或更高版本（无则自动下载 Windows embeddable Python） |
+| **Git** | 任一系统均需安装 git |
+
+---
+
 ## 快速开始（1 分钟）
 
 ### 方式一：丢给你的 AI（推荐）
@@ -36,17 +46,27 @@ AI 会自动：
 
 ### 方式二：手动设置
 
+**Windows：**
 ```powershell
 cd Bridge
 .\setup.ps1
 ```
 
+**Ubuntu：**
+```bash
+cd Bridge
+pwsh setup.ps1
+# 或先安装 PowerShell: sudo snap install powershell --classic
+```
+
 setup.ps1 会自动完成所有环境配置。完成后：
 
-1. 把 `Bridge\Agent-Bootstrap-Prompt.md` 的内容加到你 AI 客户端的 System Prompt 里
-2. 配置 MCP：命令设为 `Bridge\.venv\Scripts\python.exe`，参数设为 `Bridge\server.py`
-3. 运行 `.\scripts\setup_wizard.ps1` 填写你的个人画像
-4. 运行 `python scripts\build_agent.py --force` 生成身份文件
+1. 把 `Bridge/Agent-Bootstrap-Prompt.md` 的内容加到你 AI 客户端的 System Prompt 里
+2. 配置 MCP（路径根据系统调整）：
+   - Windows：命令 `Bridge\.venv\Scripts\python.exe`，参数 `Bridge\server.py`
+   - Linux：   命令 `Bridge/.venv/bin/python3`，        参数 `Bridge/server.py`
+3. 运行初始化引导：`pwsh scripts/setup_wizard.ps1`
+4. 运行 `python scripts/build_agent.py --force` 生成身份文件
 
 ---
 
@@ -67,7 +87,8 @@ Living-Agent-OS/
 │   ├── server.py             # MCP 服务（自动安装依赖）
 │   ├── bridge_core/          # 核心逻辑
 │   ├── setup.ps1             # 一键环境配置
-│   ├── run_mcp.cmd           # 启动 MCP 服务器
+│   ├── run_mcp.cmd           # 启动 MCP 服务器 (Windows)
+│   ├── run_mcp.sh            # 启动 MCP 服务器 (Linux)
 │   └── Agent-Bootstrap-Prompt.md  # Agent 启动指令
 ├── my_profile.md             # 你的画像（填这个！）
 └── dist/                     # 生成的 prompt 输出
