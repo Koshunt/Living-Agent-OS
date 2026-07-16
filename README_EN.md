@@ -55,8 +55,7 @@ cd Bridge
 **Ubuntu：**
 ```bash
 cd Bridge
-pwsh setup.ps1
-# Install PowerShell first: sudo snap install powershell --classic
+bash setup.sh
 ```
 
 After setup completes:
@@ -85,7 +84,8 @@ Living-Agent-OS/
 ├── Bridge/                   # MCP server (connects AI to filesystem)
 │   ├── server.py             # MCP service (auto-installs dependencies)
 │   ├── bridge_core/          # Core logic
-│   ├── setup.ps1             # One-click env setup
+│   ├── setup.ps1             # One-click env setup (Windows)
+│   ├── setup.sh              # One-click env setup (Linux)
 │   ├── run_mcp.cmd           # Launch the MCP server (Windows)
 │   ├── run_mcp.sh            # Launch the MCP server (Linux)
 │   └── Agent-Bootstrap-Prompt.md  # Agent startup instructions

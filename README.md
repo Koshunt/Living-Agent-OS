@@ -55,8 +55,7 @@ cd Bridge
 **Ubuntu：**
 ```bash
 cd Bridge
-pwsh setup.ps1
-# 或先安装 PowerShell: sudo snap install powershell --classic
+bash setup.sh
 ```
 
 setup.ps1 会自动完成所有环境配置。完成后：
@@ -86,7 +85,8 @@ Living-Agent-OS/
 ├── Bridge/                   # MCP 服务器（连接 AI 和文件系统）
 │   ├── server.py             # MCP 服务（自动安装依赖）
 │   ├── bridge_core/          # 核心逻辑
-│   ├── setup.ps1             # 一键环境配置
+│   ├── setup.ps1             # 一键环境配置 (Windows)
+│   ├── setup.sh              # 一键环境配置 (Linux)
 │   ├── run_mcp.cmd           # 启动 MCP 服务器 (Windows)
 │   ├── run_mcp.sh            # 启动 MCP 服务器 (Linux)
 │   └── Agent-Bootstrap-Prompt.md  # Agent 启动指令

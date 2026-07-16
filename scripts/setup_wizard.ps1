@@ -122,12 +122,23 @@ Write-Host "  Profile saved to: $profilePath" -ForegroundColor Green
 Write-Host "`n--- Bridge Setup ---" -ForegroundColor Green
 $runBridge = Read-Host "  Run Bridge setup now? (Y/n)"
 if ($runBridge -eq "" -or $runBridge -eq "y" -or $runBridge -eq "Y") {
-    $bridgeSetup = Join-Path (Join-Path $agentHome "Bridge") "setup.ps1"
-    if (Test-Path -LiteralPath $bridgeSetup) {
-        Write-Host "  Running Bridge setup..." -ForegroundColor Yellow
-        & $bridgeSetup
+    $isWindows = [System.Environment]::OSVersion.Platform -eq [System.PlatformID]::Win32NT
+    if ($isWindows) {
+        $bridgeSetup = Join-Path (Join-Path $agentHome "Bridge") "setup.ps1"
+        if (Test-Path -LiteralPath $bridgeSetup) {
+            Write-Host "  Running Bridge setup..." -ForegroundColor Yellow
+            & $bridgeSetup
+        } else {
+            Write-Host "  Bridge setup not found at: $bridgeSetup" -ForegroundColor Red
+        }
     } else {
-        Write-Host "  Bridge setup not found at: $bridgeSetup" -ForegroundColor Red
+        $bridgeSetup = Join-Path (Join-Path $agentHome "Bridge") "setup.sh"
+        if (Test-Path -LiteralPath $bridgeSetup) {
+            Write-Host "  Running Bridge setup with bash..." -ForegroundColor Yellow
+            & bash $bridgeSetup
+        } else {
+            Write-Host "  Bridge setup not found at: $bridgeSetup" -ForegroundColor Red
+        }
     }
 }
 

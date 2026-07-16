@@ -154,7 +154,7 @@ Write-Host "  2. (Optional) Run the setup wizard for your agent profile:"
 if ($isWindows) {
     Write-Host "     .\scripts\setup_wizard.ps1"
 } else {
-    Write-Host "     pwsh scripts/setup_wizard.ps1"
+    Write-Host "     bash Bridge/setup.sh   (or pwsh scripts/setup_wizard.ps1 if you have PowerShell)"
 }
 Write-Host ""
 Write-Host "Quick test:"
