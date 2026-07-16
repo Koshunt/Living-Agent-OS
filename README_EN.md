@@ -14,120 +14,38 @@ This template is the result of that work. It's yours now.
 
 ---
 
-## What You're Getting
+## Quick Start (1 minute)
 
-This isn't a chatbot. It's a system that lets an AI agent:
-
-- **Remember** — conversations, preferences, corrections, life events
-- **Grow** — values and personality develop over time through real interaction
-- **Stay recognizable** — the agent becomes *yours*, not just another generic assistant
-
-The model thinks. Memory preserves continuity. Values preserve personality. Shared stories keep the agent recognizable.
-
----
-
-## System Requirements
-
-| Requirement | Details |
-|-------------|---------|
-| **OS** | Windows 10/11 (this template is designed for Windows) |
-| **Python** | 3.10 or higher |
-| **IDE** | Any text editor or IDE (VS Code recommended) |
-| **AI Model** | Any LLM that supports system prompts (GPT-4, Claude, etc.) |
-| **Optional** | [CC Switch](https://github.com/anthropics/cc-switch) for IDE integration |
-
-### Install Python
-
-If you don't have Python installed:
-
-1. Download from [python.org](https://www.python.org/downloads/)
-2. During installation, check **"Add Python to PATH"**
-3. Verify: open PowerShell and run `python --version`
-
-### Install Dependencies
-
-No external packages required — this template uses only Python standard library.
-
----
-
-## Quick Start (2 minutes)
-
-### Step 1: Clone the template
+### Way 1: Throw it at your AI (recommended)
 
 ```powershell
 git clone https://github.com/Koshunt/Living-Agent-OS.git
-cd Living-Agent-OS
 ```
 
-### Step 2: Fill in your profile
+Then tell your AI:
 
-Open `my_profile.md` and write about yourself — what you want the agent to be, how you want it to talk, what you need help with.
+> **This is the Living-Agent-OS template I just cloned. Please initialize it: run Bridge\setup.ps1, configure MCP, and guide me through filling out my profile.**
 
-```markdown
-## Relationship
-Friends, keep it casual, no need to be formal
+The AI will automatically:
+1. Detect Python → download embedded Python if not found
+2. Create a virtual env → install dependencies → run tests
+3. Walk you through setting up your personal profile
+4. Configure the MCP connection
 
-## Communication Style
-Concise, give code for technical questions, casual chat otherwise
+Every new session after that, the AI will wake up with full memory continuity.
 
-## Primary Tasks
-Write code, learn, work planning
-```
-
-No right or wrong answers. Just tell it who you are.
-
-### Step 3: Build your agent
+### Way 2: Manual setup
 
 ```powershell
-python scripts\build_agent.py --force
+cd Bridge
+.\setup.ps1
 ```
 
-This reads your profile and generates the agent's identity, relationship, and values files.
-
-### Step 4: Start using it
-
-Open the generated `dist\agent_system_prompt.md` and use it as a system prompt in your AI platform.
-
-Or, if you use CC Switch, see [Bridge/CCSwitch-Guide_EN.md](Bridge/CCSwitch-Guide_EN.md) for IDE integration.
-
----
-
-## Three Sources (All Optional)
-
-You can use any combination of these to build your agent:
-
-| Source | File | What It Does |
-|--------|------|--------------|
-| **Profile** | `my_profile.md` | Write naturally about what you want |
-| **Questionnaire** | `templates/questionnaire.md` | Structured choices for relationship, tone, tasks |
-| **Chat History** | Any `.md` or `.json` file | Import real conversations |
-
-```powershell
-# From profile only
-python scripts\build_agent.py --force
-
-# From chat history
-python scripts\build_agent.py --chat "my_conversations.md" --force
-
-# From everything
-python scripts\build_agent.py --chat "chat.md" --force
-```
-
-All sources are optional. If all are empty, the agent starts blank and learns through conversation.
-
----
-
-## What Happens After You Start
-
-The agent reads `Brain/BootProtocol.md` on startup and activates its identity. You can chat naturally.
-
-To help it learn about you:
-
-1. **Share preferences**: "Keep answers short" or "Be less formal"
-2. **Share your life**: "Work was tiring today" or "I'm preparing for an interview"
-3. **Correct its behavior**: "Don't start with this phrase every time"
-
-Every correction and shared moment is recorded in memory files. The agent remembers on next startup.
+After setup completes:
+1. Copy the contents of `Bridge\Agent-Bootstrap-Prompt.md` into your AI client's System Prompt
+2. Configure MCP with `Bridge\.venv\Scripts\python.exe` as command and `Bridge\server.py` as argument
+3. Run `.\scripts\setup_wizard.ps1` to create your personal profile
+4. Run `python scripts\build_agent.py --force` to generate identity files
 
 ---
 
@@ -144,44 +62,37 @@ Living-Agent-OS/
 ├── MemoryPack/               # Long-term memory & knowledge
 ├── scripts/                  # Build, import, manage
 ├── templates/                # Starter files
-├── Bridge/                   # CC Switch integration
+├── Bridge/                   # MCP server (connects AI to filesystem)
+│   ├── server.py             # MCP service (auto-installs dependencies)
+│   ├── bridge_core/          # Core logic
+│   ├── setup.ps1             # One-click env setup
+│   ├── run_mcp.cmd           # Launch the MCP server
+│   └── Agent-Bootstrap-Prompt.md  # Agent startup instructions
 ├── my_profile.md             # Your profile (fill this!)
 └── dist/                     # Generated prompt output
 ```
 
 ---
 
-## Help Me Install on a New Machine
+## How It Works
 
-If you've synced the code to a new machine, say this to your agent:
+| Layer | Purpose |
+|-------|---------|
+| **Brain/** | Identity, values, relationship, daily memory. The agent's core personality |
+| **MemoryPack/** | Long-term memory. Important things get archived here |
+| **Bridge/** | MCP server. Lets the AI read/write files, sync Git, manage memory |
+| **scripts/** | Build, import, rollover, check tools |
+| **dist/** | Compiled system prompt, read by the agent on startup |
 
-> **I just git pulled Living-Agent-OS to D:\dev\Living-Agent-OS. Please configure the CC Switch Bridge in the Bridge directory.**
-
-The agent will handle it. But if this is the first setup (CC Switch not connected yet), do the initial connection manually:
-
-```powershell
-cd Bridge
-copy config.example.json config.json
-# Edit config.json with your local paths and Python env
-.\setup.ps1
-```
-
-After it finishes, paste the generated `ccswitch-mcp-config.json` into CC Switch → MCP → + → Custom. Everything after that can be done by the agent.
+The model thinks. Memory preserves continuity. Values preserve personality. Shared stories keep the agent recognizable.
 
 ---
 
-## CC Switch Integration
+## Set Up on a New Machine
 
-If you use CC Switch with OpenCode, Codex, or Claude, one command sets everything up:
+Clone the repo and throw it at your AI. The agent will set itself up and restore all memories.
 
-```powershell
-cd Bridge
-.\setup.ps1
-```
-
-It auto-creates a local venv, installs dependencies, runs tests, and generates the MCP config.
-
-See [Bridge/CCSwitch-Guide_EN.md](Bridge/CCSwitch-Guide_EN.md) for step-by-step instructions.
+If you've already filled out `my_profile.md` and `Brain/` files, they'll take effect automatically.
 
 ---
 
@@ -199,12 +110,6 @@ Run the privacy check:
 
 ```powershell
 python scripts\check_before_publish.py
-```
-
-To skip the check:
-
-```powershell
-python scripts\check_before_publish.py --skip
 ```
 
 ---

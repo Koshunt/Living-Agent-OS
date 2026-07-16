@@ -14,120 +14,39 @@
 
 ---
 
-## 你将获得什么
+## 快速开始（1 分钟）
 
-这不是一个聊天机器人。这是一个让 AI Agent 能够：
-
-- **记住** — 对话、偏好、修正、生活事件
-- **成长** — 价值观和个性通过真实互动逐渐形成
-- **保持辨识度** — Agent 会变成*你的*，而不是另一个通用助手
-
-模型负责思考。记忆保存连续性。价值观保存人格。共同的故事让 Agent 在时间流逝中仍然可以被认出来。
-
----
-
-## 系统需求
-
-| 需求 | 说明 |
-|------|------|
-| **操作系统** | Windows 10/11（本模板专为 Windows 设计） |
-| **Python** | 3.10 或更高版本 |
-| **IDE** | 任意文本编辑器或 IDE（推荐 VS Code） |
-| **AI 模型** | 任何支持 System Prompt 的 LLM（GPT-4、Claude 等） |
-| **可选** | [CC Switch](https://github.com/anthropics/cc-switch) 用于 IDE 集成 |
-
-### 安装 Python
-
-如果没有安装 Python：
-
-1. 从 [python.org](https://www.python.org/downloads/) 下载
-2. 安装时勾选 **"Add Python to PATH"**
-3. 验证：打开 PowerShell，运行 `python --version`
-
-### 安装依赖
-
-不需要安装任何第三方库——本模板只使用 Python 标准库。
-
----
-
-## 快速开始（2 分钟）
-
-### 第 1 步：克隆模板
+### 方式一：丢给你的 AI（推荐）
 
 ```powershell
 git clone https://github.com/Koshunt/Living-Agent-OS.git
-cd Living-Agent-OS
 ```
 
-### 第 2 步：填写你的画像
+然后把整个文件夹路径告诉你的 AI，说这句话：
 
-打开 `my_profile.md`，写下关于你自己的事情——你希望 Agent 是什么样的、怎么说话、需要什么帮助。
+> **这是 Living-Agent-OS 模板，我刚 clone 下来的。请帮我完成初始化设置：运行 Bridge 的 setup.ps1，配置 MCP，读取我的画像引导我填写 my_profile.md。**
 
-```markdown
-## 关系
-朋友，轻松一点，不要太正式
+AI 会自动：
+1. 检测 Python → 没有就下载 embeddable Python
+2. 创建虚拟环境 → 安装依赖 → 运行测试
+3. 引导你填写个人画像
+4. 配置 MCP 连接
 
-## 说话风格
-简洁，技术问题给代码，平时可以闲聊
+以后每次打开新会话，AI 会自动唤醒记忆，就像从未离开过。
 
-## 主要用途
-写代码、学习、工作规划
-```
-
-没有对错之分。只要告诉它你是谁。
-
-### 第 3 步：构建你的 Agent
+### 方式二：手动设置
 
 ```powershell
-python scripts\build_agent.py --force
+cd Bridge
+.\setup.ps1
 ```
 
-这会读取你的画像，自动生成 Agent 的身份、关系和价值观文件。
+setup.ps1 会自动完成所有环境配置。完成后：
 
-### 第 4 步：开始使用
-
-打开生成的 `dist\agent_system_prompt.md`，把它作为 System Prompt 放进你用的 AI 平台。
-
-如果你用 CC Switch， see [Bridge/CCSwitch-Guide.md](Bridge/CCSwitch-Guide.md) 了解如何接入 IDE。
-
----
-
-## 三种来源（全部可选）
-
-你可以任意组合这些来源来构建 Agent：
-
-| 来源 | 文件 | 作用 |
-|------|------|------|
-| **画像** | `my_profile.md` | 用自然语言写你想要什么 |
-| **问卷** | `templates/questionnaire.md` | 结构化选择关系、语气、任务 |
-| **聊天记录** | 任意 `.md` 或 `.json` 文件 | 导入真实对话 |
-
-```powershell
-# 只用画像
-python scripts\build_agent.py --force
-
-# 用聊天记录
-python scripts\build_agent.py --chat "我的对话.md" --force
-
-# 全部都用
-python scripts\build_agent.py --chat "聊天记录.md" --force
-```
-
-所有来源都是可选的。如果全部为空，Agent 从零开始，在对话中学习成长。
-
----
-
-## 启动之后会发生什么
-
-Agent 启动时读取 `Brain/BootProtocol.md`，自动激活身份。你可以直接像平时一样和它聊天。
-
-如果你想让它更了解你：
-
-1. **告诉它你的偏好**："以后回答简洁一点"、"不要太正式"
-2. **分享你的生活**："今天工作很累"、"我在准备面试"
-3. **纠正它的行为**："不要每次都用这个开头"、"这个问题不要再提了"
-
-每一次修正和分享，都会被记录到记忆文件中，下次启动时 Agent 仍然记得。
+1. 把 `Bridge\Agent-Bootstrap-Prompt.md` 的内容加到你 AI 客户端的 System Prompt 里
+2. 配置 MCP：命令设为 `Bridge\.venv\Scripts\python.exe`，参数设为 `Bridge\server.py`
+3. 运行 `.\scripts\setup_wizard.ps1` 填写你的个人画像
+4. 运行 `python scripts\build_agent.py --force` 生成身份文件
 
 ---
 
@@ -144,39 +63,37 @@ Living-Agent-OS/
 ├── MemoryPack/               # 长期记忆和知识
 ├── scripts/                  # 构建、导入、管理
 ├── templates/                # 空白起始文件
-├── Bridge/                   # CC Switch 集成
+├── Bridge/                   # MCP 服务器（连接 AI 和文件系统）
+│   ├── server.py             # MCP 服务（自动安装依赖）
+│   ├── bridge_core/          # 核心逻辑
+│   ├── setup.ps1             # 一键环境配置
+│   ├── run_mcp.cmd           # 启动 MCP 服务器
+│   └── Agent-Bootstrap-Prompt.md  # Agent 启动指令
 ├── my_profile.md             # 你的画像（填这个！）
 └── dist/                     # 生成的 prompt 输出
 ```
 
 ---
 
-## 在新电脑上让 Agent 帮你一键安装
+## 它是如何工作的
 
-如果你在新电脑上同步了代码，可以对 Agent 说这句话：
+| 层级 | 作用 |
+|------|------|
+| **Brain/** | 身份、价值观、关系、每日记忆。Agent 的核心人格 |
+| **MemoryPack/** | 长期记忆。重要的事情归档到这里 |
+| **Bridge/** | MCP 服务器。让 AI 能读写文件、同步 Git、管理记忆 |
+| **scripts/** | 构建、导入、滚动记忆、检查等工具 |
+| **dist/** | 编译后的系统提示词，Agent 启动时读取 |
 
-> **我刚在新电脑上 git pull 了 Living-Agent-OS，路径在 D:\dev\Living-Agent-OS。请帮我一键配置 Bridge 目录下的 CC Switch。**
-
-Agent 会自动完成：创建虚拟环境 → 装依赖 → 跑测试 → 生成 MCP 配置。
-
-但如果这是第一次配置（CC Switch 还没接入），需要手动粘一次配置文件：
-
-跑完 `setup.ps1` 后，把生成的 `ccswitch-mcp-config.json` 粘贴到 CC Switch → MCP → + → 自定义 中。之后所有安装都可以交给 Agent 了。
+模型负责思考。记忆保存连续性。价值观保存人格。共同的故事让 Agent 在时间流逝中仍然可以被认出来。
 
 ---
 
-## CC Switch 集成
+## 在新电脑上恢复
 
-如果你用 CC Switch 配合 OpenCode、Codex 或 Claude，一条命令搞定：
+只要 clone 这个仓库，丢给你的 AI，它就会自己恢复所有记忆。
 
-```powershell
-cd Bridge
-.\setup.ps1
-```
-
-脚本会自动创建虚拟环境、安装依赖、跑测试、生成 MCP 配置。
-
-详细步骤见 [Bridge/CCSwitch-Guide.md](Bridge/CCSwitch-Guide.md)。
+如果你之前填写过 `my_profile.md` 和 `Brain/` 下的文件，它们会自动生效。
 
 ---
 
@@ -194,12 +111,6 @@ cd Bridge
 
 ```powershell
 python scripts\check_before_publish.py
-```
-
-如果不想检查，可以跳过：
-
-```powershell
-python scripts\check_before_publish.py --skip
 ```
 
 ---

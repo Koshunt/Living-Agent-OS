@@ -1,10 +1,46 @@
 from __future__ import annotations
 
+import importlib
+import subprocess
+import sys
+from pathlib import Path
+
+
+def _bootstrap_deps() -> None:
+    """Auto-install missing dependencies when server first starts."""
+    missing = []
+    for mod in ("mcp", "pydantic"):
+        try:
+            importlib.import_module(mod)
+        except ImportError:
+            missing.append(mod)
+    if not missing:
+        return
+    req_file = Path(__file__).resolve().parent / "requirements.txt"
+    if req_file.is_file():
+        cmd = [
+            sys.executable,
+            "-m",
+            "pip",
+            "install",
+            "-r",
+            str(req_file),
+            "--quiet",
+            "--no-warn-script-location",
+        ]
+        subprocess.check_call(cmd)
+    else:
+        cmd = [sys.executable, "-m", "pip", "install", *missing, "--quiet", "--no-warn-script-location"]
+        subprocess.check_call(cmd)
+
+
+_bootstrap_deps()
+
 from mcp.server.fastmcp import FastMCP
 from mcp.types import ToolAnnotations
 from pydantic import BaseModel, ConfigDict, Field
 
-from xiaohui_bridge.core import (
+from bridge_core.core import (
     as_json,
     build_context,
     git_state,
