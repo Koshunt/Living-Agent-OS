@@ -39,8 +39,10 @@ from mcp.types import ToolAnnotations
 from pydantic import BaseModel, ConfigDict, Field
 
 from bridge_core.core import (
+    apply_proposal,
     as_json,
     build_context,
+    create_proposal,
     git_state,
     read_text,
     resolve_home,
@@ -78,6 +80,19 @@ class StatusInput(StrictInput):
         default=False,
         description="Whether to fetch origin/main before reporting ahead/behind state.",
     )
+
+
+class ProposalInput(StrictInput):
+    title: str = Field(..., min_length=1, max_length=200)
+    change: str = Field(..., min_length=1, max_length=8000)
+    future_effect: str = Field(..., min_length=1, max_length=8000)
+    suggested_target: str = Field(..., description="reflection, continuity, correction, decision, or knowledge")
+    source_excerpt: str = Field(default="", max_length=4000)
+
+
+class ApplyProposalInput(StrictInput):
+    proposal_name: str = Field(..., min_length=1, max_length=260)
+    confirmation: str = Field(..., description='Explicit user confirmation: "确认", "确认写入", or "确认写入长期记忆".')
 
 
 class VerifyInput(StrictInput):
@@ -150,6 +165,24 @@ def agent_git_status(params: StatusInput) -> str:
     if params.fetch_remote:
         return as_json(sync_git(home, fetch=True, pull=False))
     return as_json(git_state(home))
+
+
+@mcp.tool(
+    name="agent_propose_memory",
+    annotations=ToolAnnotations(title="Create A Reviewable Memory Proposal", readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=False),
+)
+def agent_propose_memory(params: ProposalInput) -> str:
+    """Create an ignored local proposal without changing durable memory."""
+    return as_json(create_proposal(resolve_home(), params.title, params.change, params.future_effect, params.suggested_target, params.source_excerpt))
+
+
+@mcp.tool(
+    name="agent_apply_memory",
+    annotations=ToolAnnotations(title="Apply An Approved Memory Proposal", readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=False),
+)
+def agent_apply_memory(params: ApplyProposalInput) -> str:
+    """Apply one proposal only after explicit user confirmation."""
+    return as_json(apply_proposal(resolve_home(), params.proposal_name, params.confirmation))
 
 
 @mcp.tool(

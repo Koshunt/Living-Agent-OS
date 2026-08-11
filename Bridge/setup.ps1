@@ -114,9 +114,9 @@ if (Test-Path -LiteralPath $testBridge) {
     if ($LASTEXITCODE -ne 0) { throw "Bridge tests failed." }
     Write-Host "  Bridge tests passed."
 }
-& $venvPython -m py_compile (Join-Path $bridge "server.py")
-if ($LASTEXITCODE -ne 0) { throw "Server syntax check failed." }
-Write-Host "  Server syntax OK."
+& $venvPython (Join-Path $agentHome "scripts\verify_agent.py")
+if ($LASTEXITCODE -ne 0) { throw "Agent OS verification failed." }
+Write-Host "  Agent OS verification passed."
 
 $testMCP = Join-Path $bridge "test_mcp_protocol.py"
 if (Test-Path -LiteralPath $testMCP) {

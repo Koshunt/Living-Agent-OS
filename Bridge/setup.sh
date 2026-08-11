@@ -62,9 +62,9 @@ echo "  Dependencies installed."
 
 # Step 5: Run tests + print next steps
 echo ""
-echo "[5/5] Running syntax check..."
-"$VENV_PYTHON" -m py_compile "$BRIDGE_DIR/server.py"
-echo "  Server syntax OK."
+echo "[5/5] Running Agent OS verification..."
+"$VENV_PYTHON" "$AGENT_HOME/scripts/verify_agent.py"
+echo "  Agent OS verification passed."
 
 # Generate MCP config hint
 echo ""

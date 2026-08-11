@@ -29,6 +29,15 @@ REQUIRED_PATHS = (
     "scripts/update_memory.py",
 )
 
+PROPOSAL_TARGETS = {
+    "reflection": "Brain/Reflection.md",
+    "continuity": "MemoryPack/Memory/ContinuityMemory.md",
+    "correction": "MemoryPack/Memory/CorrectionLog.md",
+    "decision": "MemoryPack/Memory/DecisionMemory.md",
+    "knowledge": "MemoryPack/Knowledge/DomainKnowledge.md",
+}
+MEMORY_CONFIRMATIONS = {"确认", "确认写入", "确认写入长期记忆"}
+
 
 @dataclass(frozen=True)
 class CommandResult:
@@ -199,8 +208,79 @@ def build_context(home: Path, message: str) -> dict[str, Any]:
     }
 
 
+def proposal_dir(home: Path) -> Path:
+    directory = safe_path(home, "workspace/mcp_proposals")
+    directory.mkdir(parents=True, exist_ok=True)
+    return directory
+
+
+def create_proposal(
+    home: Path,
+    title: str,
+    change: str,
+    future_effect: str,
+    suggested_target: str,
+    source_excerpt: str = "",
+) -> dict[str, Any]:
+    if suggested_target not in PROPOSAL_TARGETS:
+        allowed = ", ".join(sorted(PROPOSAL_TARGETS))
+        raise ValueError(f"Unknown target. Choose one of: {allowed}")
+    now = datetime.now().astimezone()
+    payload = {
+        "title": title.strip(),
+        "change": change.strip(),
+        "future_effect": future_effect.strip(),
+        "suggested_target": suggested_target,
+        "target_file": PROPOSAL_TARGETS[suggested_target],
+        "source_excerpt": source_excerpt.strip()[:4000],
+        "created_at": now.isoformat(timespec="seconds"),
+        "status": "awaiting user approval",
+    }
+    canonical = json.dumps(payload, ensure_ascii=False, sort_keys=True)
+    payload["sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+    filename = now.strftime("%Y%m%d_%H%M%S_%f") + ".json"
+    path = proposal_dir(home) / filename
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return {"proposal": str(path), "details": payload}
+
+
+def apply_proposal(home: Path, proposal_name: str, confirmation: str) -> dict[str, Any]:
+    if confirmation.strip() not in MEMORY_CONFIRMATIONS:
+        allowed = "、".join(sorted(MEMORY_CONFIRMATIONS))
+        raise ValueError(f"Permanent memory update requires explicit confirmation: {allowed}")
+    directory = proposal_dir(home).resolve()
+    proposal = (directory / Path(proposal_name).name).resolve()
+    if proposal.parent != directory or not proposal.is_file():
+        raise FileNotFoundError("Proposal was not found in workspace/mcp_proposals.")
+    payload = json.loads(proposal.read_text(encoding="utf-8"))
+    if payload.get("status") != "awaiting user approval":
+        raise ValueError("Proposal is not awaiting approval.")
+    target_key = payload.get("suggested_target")
+    if target_key not in PROPOSAL_TARGETS:
+        raise ValueError("Proposal target is no longer allowed.")
+    target = safe_path(home, PROPOSAL_TARGETS[target_key])
+    block = (
+        f"\n\n## {date.today().isoformat()}: {payload['title']}\n\n"
+        "Source: reviewed Agent OS memory proposal\n\n"
+        f"What changed:\n\n{payload['change']}\n\n"
+        f"Future effect:\n\n{payload['future_effect']}\n"
+    )
+    with target.open("a", encoding="utf-8", newline="\n") as handle:
+        handle.write(block)
+    payload["status"] = "applied"
+    payload["applied_at"] = datetime.now().astimezone().isoformat(timespec="seconds")
+    proposal.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    generated = run_python(home, "update_memory.py")
+    return {
+        "updated": str(target),
+        "proposal": str(proposal),
+        "prompt_regenerated": generated.returncode == 0,
+        "next_step": "Run agent_verify before committing. Commit and push still require user approval.",
+    }
+
+
 def verify(home: Path) -> dict[str, Any]:
-    result = run_python(home, "check_memory_pack.py", timeout=300)
+    result = run_python(home, "verify_agent.py", timeout=300)
     return {
         "ok": result.returncode == 0,
         "stdout": result.stdout[-20_000:],

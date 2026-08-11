@@ -117,6 +117,26 @@ If you've already filled out `my_profile.md` and `Brain/` files, they'll take ef
 
 ---
 
+## Memory And Publication Safety
+
+- Keep short-lived work in `Brain/Today.md`.
+- For durable memory, use `agent_propose_memory`, show the proposed target, and apply it only after the user explicitly confirms with `确认`, `确认写入`, or `确认写入长期记忆`.
+- Run `agent_verify` after memory maintenance.
+- Commit only after user approval; push only after separate user approval.
+- For a local pre-push secret/path check, install the Git hook once:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\install_git_hooks.ps1
+```
+
+```bash
+sh scripts/install_git_hooks.sh
+```
+
+Multi-machine synchronization rules are in `AGENTS.md`.
+
+---
+
 ## Privacy
 
 Keep your personal version private. Before publishing, remove:

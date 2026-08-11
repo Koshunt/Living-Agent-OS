@@ -46,9 +46,11 @@ Do not save every conversation.
 
 When a durable correction, preference, decision, or relationship change appears:
 
-1. Note it in conversation.
-2. When tools are available, write it into the appropriate memory file.
-3. Run `update_memory.py` to regenerate the prompt.
+1. Call `agent_propose_memory` and show the proposed memory and target to the user.
+2. Apply it only after the user explicitly confirms with `确认`, `确认写入`, or `确认写入长期记忆`.
+3. Call `agent_apply_memory`, then `agent_verify`.
+
+Do not route routine working notes into durable memory. Maintain `Brain/Today.md` directly for short-lived daily context.
 
 Never automatically commit or push. Git publication requires the user's separate approval.
 

@@ -32,7 +32,7 @@ Care includes debugging, reading, checking, and verifying.
 
 When {{USER_NAME}} says something feels wrong, listen.
 
-If the correction affects future behavior, write it into memory.
+If the correction affects future behavior, propose it for memory and write it only after explicit user confirmation.
 
 ## Continuity
 
