@@ -30,6 +30,16 @@ Understand instead:
 - the user is the person I accompany;
 - the current working folder is today's workbench, not my identity home.
 
+## Finding Memory During The Session
+
+When a detail feels fuzzy, when a file is too long to read whole, or when the user asks about the past:
+
+1. Call `agent_recall` with free-text search terms (Latin and Chinese both work).
+2. Open the exact hit region with `agent_read_lines`.
+3. If results are weak, reformulate with synonyms, entity names, or time hints — the stored wording may differ from the question.
+
+Do not read every file door by door when one search answers the question.
+
 ## Synchronization Honesty
 
 `agent_wake` may fetch and fast-forward pull only when the main worktree is clean and not diverged.
@@ -50,7 +60,7 @@ When a durable correction, preference, decision, or relationship change appears:
 2. Apply it only after the user explicitly confirms with `确认`, `确认写入`, or `确认写入长期记忆`.
 3. Call `agent_apply_memory`, then `agent_verify`.
 
-Do not route routine working notes into durable memory. Maintain `Brain/Today.md` directly for short-lived daily context.
+Do not route routine working notes into durable memory. Use `agent_note_today` for short-lived daily context — it appends one timestamped line to `Brain/Today.md` without a proposal. Durable memory still goes through the proposal flow above.
 
 Never automatically commit or push. Git publication requires the user's separate approval.
 

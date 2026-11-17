@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import os
+import re
 import subprocess
 import sys
 from dataclasses import asdict, dataclass
@@ -182,6 +184,132 @@ def read_text(home: Path, relative: str, max_chars: int = 60_000) -> str:
     return text[:max_chars] + f"\n\n[Truncated after {max_chars} characters]\n"
 
 
+_CJK_RUN = re.compile(r"[㐀-䶿一-鿿]+")
+
+
+def read_text_resilient(path: Path) -> tuple[str, str]:
+    """Read a text file without letting mixed encoding kill the wake.
+
+    Machines on Chinese Windows sometimes append GBK bytes to UTF-8 files.
+    Try strict UTF-8, then GBK, then lenient UTF-8, and report which codec
+    worked so a damaged file is visible instead of fatal.
+    """
+    raw = path.read_bytes()
+    for codec in ("utf-8", "gbk"):
+        try:
+            return raw.decode(codec), codec
+        except UnicodeDecodeError:
+            continue
+    return raw.decode("utf-8", errors="replace"), "utf-8 (lenient)"
+
+
+def _query_terms(query: str) -> list[str]:
+    """Split a query into searchable terms: latin words plus CJK bigrams."""
+    terms = [w.lower() for w in re.findall(r"[a-zA-Z0-9]+", query)]
+    for run in _CJK_RUN.findall(query):
+        if len(run) == 1:
+            terms.append(run)
+        else:
+            terms.extend(run[i:i + 2] for i in range(len(run) - 1))
+    seen: set[str] = set()
+    ordered: list[str] = []
+    for term in terms:
+        if term not in seen:
+            seen.add(term)
+            ordered.append(term)
+    return ordered
+
+
+def recall(home: Path, query: str, limit: int = 6, prefix: str | None = None) -> dict[str, Any]:
+    """Full-text recall across every markdown file under Brain/.
+
+    Plain scan, no index to go stale; a memory pack this size scans in
+    milliseconds. Hits are (file, line, text, score) — open the exact region
+    afterwards with read_lines. Latin terms match on word boundaries, CJK
+    terms as substrings; queries mixing both work.
+    """
+    terms = _query_terms(query)
+    if not terms:
+        return {"query": query, "error": "no searchable terms in query"}
+
+    files = sorted((home / "Brain").rglob("*.md"))
+    files = [p for p in files if not any(part.startswith(".") for part in p.relative_to(home).parts)]
+    if prefix:
+        plow = prefix.lower()
+        files = [p for p in files if plow in str(p.relative_to(home)).lower()]
+
+    file_texts: list[tuple[Path, list[str]]] = []
+    df: dict[str, int] = {}
+    for path in files:
+        text, _ = read_text_resilient(path)
+        file_texts.append((path, text.splitlines()))
+        low = text.lower()
+        for term in terms:
+            if term in low:
+                df[term] = df.get(term, 0) + 1
+
+    total = max(len(file_texts), 1)
+    hits: list[dict[str, Any]] = []
+    file_scores: dict[str, float] = {}
+    for path, lines in file_texts:
+        rel = str(path.relative_to(home))
+        for number, raw in enumerate(lines, 1):
+            line = raw.strip()
+            if not line:
+                continue
+            low = line.lower()
+            score = 0.0
+            matched = 0
+            for term in terms:
+                if term.isascii() and term.isalnum():
+                    tf = len(re.findall(r"\b" + re.escape(term) + r"\b", low))
+                else:
+                    tf = low.count(term)
+                if tf:
+                    score += tf * math.log(1 + total / df[term])
+                    matched += 1
+            if not score:
+                continue
+            if len(terms) > 1 and matched == len(terms):
+                score *= 1.5
+            file_scores[rel] = file_scores.get(rel, 0.0) + score
+            hits.append({"file": rel, "line": number, "text": line[:160], "score": round(score, 2)})
+
+    hits.sort(key=lambda h: (-h["score"], h["file"], h["line"]))
+    seen_text: set[str] = set()
+    unique = [h for h in hits if not (h["text"] in seen_text or seen_text.add(h["text"]))]
+    top_files = sorted(file_scores.items(), key=lambda kv: -kv[1])[:6]
+    return {
+        "query": query,
+        "terms": terms,
+        "searched_files": len(file_texts),
+        "files_with_hits": len(file_scores),
+        "top_files": [{"file": f, "score": round(s, 2)} for f, s in top_files],
+        "hits": unique[:limit],
+        "total_hits": len(hits),
+        "note": "open an exact region with agent_read_lines(file, start, end)",
+    }
+
+
+def read_lines(home: Path, relative: str, start: int, end: int, context: int = 0) -> dict[str, Any]:
+    """Read a precise line range of one file — the follow-up to a recall hit."""
+    path = safe_path(home, relative)
+    if not path.is_file():
+        return {"error": f"not a file: {relative}"}
+    text, codec = read_text_resilient(path)
+    lines = text.splitlines()
+    first = max(1, start - context)
+    last = min(len(lines), end + context)
+    return {
+        "file": relative,
+        "encoding": codec,
+        "total_lines": len(lines),
+        "start": first,
+        "end": last,
+        "lines": [{"line": i, "text": lines[i - 1]} for i in range(first, last + 1)],
+    }
+
+
 def wake(home: Path, auto_sync: bool = True) -> dict[str, Any]:
     sync = sync_git(home, fetch=auto_sync, pull=auto_sync)
     runtime = ensure_runtime(home)
@@ -206,6 +334,36 @@ def build_context(home: Path, message: str) -> dict[str, Any]:
         "message": message,
         "context": read_text(home, "dist/conversation_context.md", max_chars=80_000),
     }
+
+
+def note_today(home: Path, note: str) -> dict[str, Any]:
+    """Append one timestamped line at the end of the Current State section.
+
+    Today.md is short-lived working memory, so unlike durable memory this
+    writes directly without a proposal. Durable memory still requires
+    create_proposal + apply_proposal with explicit user confirmation.
+    """
+    today_path = safe_path(home, "Brain/Today.md")
+    stamp = datetime.now().strftime("%H:%M")
+    line = f"- [{stamp}] {note.strip()}"
+    marker = "## Current State"
+    if today_path.is_file():
+        lines = today_path.read_text(encoding="utf-8").splitlines()
+    else:
+        lines = ["# Today", "", f"Date: {date.today():%Y-%m-%d}", "", marker]
+    try:
+        start = next(i for i, ln in enumerate(lines) if ln.strip() == marker)
+    except StopIteration:
+        lines += ["", marker, line]
+    else:
+        end = next(
+            (i for i in range(start + 1, len(lines)) if lines[i].startswith("## ")),
+            len(lines),
+        )
+        lines.insert(end, line)
+    text = "\n".join(lines).rstrip() + "\n"
+    today_path.write_text(text, encoding="utf-8")
+    return {"status": "ok", "chars": len(text)}
 
 
 def proposal_dir(home: Path) -> Path:

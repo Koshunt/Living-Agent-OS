@@ -44,7 +44,10 @@ from bridge_core.core import (
     build_context,
     create_proposal,
     git_state,
+    note_today,
+    read_lines,
     read_text,
+    recall,
     resolve_home,
     sync_git,
     verify,
@@ -99,6 +102,37 @@ class VerifyInput(StrictInput):
     pass
 
 
+class NoteInput(StrictInput):
+    note: str = Field(
+        ...,
+        min_length=1,
+        max_length=500,
+        description="One Today.md line: what happened, a decision, or a loose end.",
+    )
+
+
+class RecallInput(StrictInput):
+    query: str = Field(
+        ...,
+        min_length=1,
+        max_length=500,
+        description="Free text to search for. Latin words and CJK both work.",
+    )
+    limit: int = Field(default=6, ge=1, le=30, description="Max hits returned.")
+    prefix: str = Field(
+        default="",
+        max_length=200,
+        description="Restrict search to files whose relative path contains this.",
+    )
+
+
+class ReadLinesInput(StrictInput):
+    file: str = Field(..., min_length=1, max_length=300, description="Relative path from the Agent OS home.")
+    start: int = Field(..., ge=1, description="First line to read (1-based).")
+    end: int = Field(..., ge=1, description="Last line to read (inclusive).")
+    context: int = Field(default=0, ge=0, le=50, description="Extra lines of context on each side.")
+
+
 @mcp.tool(
     name="agent_ping",
     annotations=ToolAnnotations(
@@ -132,6 +166,61 @@ def agent_wake(params: WakeInput) -> str:
     It never commits, pushes, resolves conflicts, or overwrites a dirty worktree.
     """
     return as_json(wake(resolve_home(), auto_sync=params.auto_sync))
+
+
+@mcp.tool(
+    name="agent_note_today",
+    annotations=ToolAnnotations(
+        title="Append One Line To Today Working Memory",
+        readOnlyHint=False,
+        destructiveHint=False,
+        idempotentHint=False,
+        openWorldHint=False,
+    ),
+)
+def agent_note_today(params: NoteInput) -> str:
+    """Append one timestamped line to Brain/Today.md (short-lived working memory).
+
+    Writes directly without a proposal: Today.md is ephemeral and reset daily.
+    Durable memory still requires agent_propose_memory + explicit confirmation.
+    """
+    return as_json(note_today(resolve_home(), params.note))
+
+
+@mcp.tool(
+    name="agent_recall",
+    annotations=ToolAnnotations(
+        title="Search All Memory At Once",
+        readOnlyHint=True,
+        destructiveHint=False,
+        idempotentHint=True,
+        openWorldHint=False,
+    ),
+)
+def agent_recall(params: RecallInput) -> str:
+    """Full-text search over every markdown file under Brain/ (Latin and CJK).
+
+    Use whenever a detail feels fuzzy, a file is too long to read whole, or
+    the user asks about the past. Hits are (file, line, text, score); open
+    the exact region next with agent_read_lines. If results are weak, retry
+    with synonyms, entity names, or time hints — stored wording may differ.
+    """
+    return as_json(recall(resolve_home(), params.query, params.limit, params.prefix or None))
+
+
+@mcp.tool(
+    name="agent_read_lines",
+    annotations=ToolAnnotations(
+        title="Read An Exact Region",
+        readOnlyHint=True,
+        destructiveHint=False,
+        idempotentHint=True,
+        openWorldHint=False,
+    ),
+)
+def agent_read_lines(params: ReadLinesInput) -> str:
+    """Open the precise lines a recall hit pointed at, with optional context."""
+    return as_json(read_lines(resolve_home(), params.file, params.start, params.end, params.context))
 
 
 @mcp.tool(

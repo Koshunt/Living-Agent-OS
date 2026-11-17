@@ -14,6 +14,15 @@
 
 ---
 
+## v0.2 新增（2026-11）
+
+- **夜间做梦**：`Bridge/dream.py` 每晚把 Today.md 蒸馏进长期记忆（`Brain/Living/{year}.md` 与 `Reflection.md`），归档、重置、自动提交——幂等、失败安全、逐模型重试。见 `docs/DreamAndSync.md`。
+- **交班笔**：新 MCP 工具 `agent_note_today`，往 Today.md 追加一行带时间戳的要点（Today 是短期工作记忆，直写；长期记忆仍走提案+确认）。
+- **记忆检索**：`agent_recall` 全文搜索 Brain/（英文词边界 + 中文 bigram 评分），`agent_read_lines` 打开命中区域——不用翻每个文件就能想起任何事。
+- **增量同步**：`Bridge/sync.sh` 挂 cron 即用（提交 `sync(host): auto` → pull --rebase → push），和做梦机守卫配套组成多机拓扑。
+- **多机拓扑**：远端 main 为单一真相源；全集群只有一台"做梦机"（`dream_host` 配置），其余机器只聊天+增量 push。
+- v0.2 的模式回填自一个自 2026-08 起每日运行的生产部署。
+
 ## 系统需求
 
 | 需求 | 说明 |

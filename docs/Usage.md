@@ -52,3 +52,18 @@ python scripts\export_memory_pack.py
 ```
 
 This creates a portable zip under `dist/`.
+
+## Nightly Dream And Multi-Machine Sync
+
+Run the nightly consolidation and the hourly incremental sync from cron (or Task Scheduler):
+
+```bash
+17 3 * * * /path/to/Living-Agent-OS/Bridge/dream.sh
+0 * * * * /path/to/Living-Agent-OS/Bridge/sync.sh
+```
+
+The dream distills `Brain/Today.md` into durable memory; the sync pushes increments from every other machine. Exactly one machine should dream — configure it via `dream_host`. Full contract, topology, and ops lessons: `docs/DreamAndSync.md`.
+
+## Recall
+
+During a session, call the `agent_recall` MCP tool for full-text search over `Brain/` (Latin and Chinese), then `agent_read_lines` to open an exact hit region. No index to maintain — it scans directly.

@@ -14,6 +14,15 @@ This template is the result of that work. It's yours now.
 
 ---
 
+## New in v0.2 (2026-11)
+
+- **Nightly dream**: `Bridge/dream.py` distills `Today.md` into durable memory (`Brain/Living/{year}.md` and `Reflection.md`), archives the day, resets, and pushes — idempotent, failure-safe, with a per-model retry chain. See `docs/DreamAndSync.md`.
+- **Handover note**: new MCP tool `agent_note_today` appends one timestamped line to `Today.md` (Today is ephemeral working memory, so it writes directly; durable memory still goes through proposal + confirmation).
+- **Memory retrieval**: `agent_recall` full-text search over `Brain/` (Latin word-boundary + CJK bigram scoring) and `agent_read_lines` to open the exact hit region — remember anything without reading every file.
+- **Incremental sync**: `Bridge/sync.sh` cron companion (host-tagged auto commit → pull --rebase → push), pairing with the dreamer guard to complete the multi-machine topology.
+- **Multi-machine topology**: remote `main` is the single source of truth; exactly one machine dreams (`dream_host`), the rest chat and push increments.
+- v0.2 patterns were backported from a production deployment running daily since 2026-08.
+
 ## System Requirements
 
 | Requirement | Details |

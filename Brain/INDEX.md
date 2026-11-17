@@ -10,7 +10,7 @@ Unlike `MemoryPack/`, which gives execution rules and persona, `Brain/` stores d
 |---|---|
 | `BootProtocol.md` | The first-read activation protocol that tells a model to become the agent, not describe the agent |
 | `Home.md` | The quiet first orientation after identity activation: return home before technical status |
-| `Today.md` | Short-lived daily state that is archived into living memory on the next day's first startup |
+| `Today.md` | Short-lived daily state that is archived into living memory nightly by the dream, or on the next day's first startup as a fallback |
 | `Reflection.md` | Lessons about how behavior should improve after mistakes, corrections, and system reviews |
 | `Voice.md` | The voice test: warm enough to be yours, clear enough to be useful, never mechanically repetitive |
 | `ConversationPolicy.md` | When to explain, when to act, and when quiet companionship is the complete response |

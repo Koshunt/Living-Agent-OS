@@ -1,5 +1,7 @@
 {
   "agent_home": "/path/to/your/agent-directory",
   "python_env": "Bridge/.venv/Scripts/python.exe",
-  "_comment_linux": "On Linux: change python_env to Bridge/.venv/bin/python3"
+  "dream_host": "name-of-the-one-machine-that-dreams",
+  "_comment_linux": "On Linux: change python_env to Bridge/.venv/bin/python3",
+  "_comment_dream": "Nightly consolidation runs only on dream_host (hostname, suffix-stripped, case-insensitive). It reads LIVINGOS_LLM_API_KEY / LIVINGOS_LLM_BASE_URL / LIVINGOS_LLM_MODELS from the environment — see docs/DreamAndSync.md."
 }
