@@ -157,7 +157,7 @@ def parse_md_role(path: Path) -> list[tuple[str, str]]:
     current_role: str | None = None
     current_lines: list[str] = []
     role_pattern = re.compile(
-        r"^\*?\*?(Human|User|Assistant|AI|System|小灰|Nathaniel)\*?\*?\s*[:：]",
+        r"^\*?\*?(Human|User|Assistant|AI|System|Agent|Companion)\*?\*?\s*[:：]",
         re.IGNORECASE,
     )
     for line in path.read_text(encoding="utf-8").splitlines():
@@ -166,7 +166,7 @@ def parse_md_role(path: Path) -> list[tuple[str, str]]:
             if current_role:
                 messages.append((current_role, "\n".join(current_lines).strip()))
             raw_role = m.group(1).lower()
-            current_role = "user" if raw_role in ("human", "user", "nathaniel") else "assistant"
+            current_role = "user" if raw_role in ("human", "user") else "assistant"
             content = role_pattern.sub("", line.strip()).strip()
             current_lines = [content] if content else []
         elif current_role and line.strip():

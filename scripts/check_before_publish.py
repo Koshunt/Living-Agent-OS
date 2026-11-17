@@ -22,12 +22,12 @@ SECRET_PATTERNS = [
 
 PRIVATE_TERMS: list[str] = [
     "Nathaniel",
-    "Koshunt",
+    "小灰",
     "D:\\WZY",
     "D:/WZY",
 ]
 
-SKIP_PARTS = {".git", "dist", "__pycache__", "node_modules"}
+SKIP_PARTS = {".git", "dist", "__pycache__", "node_modules", ".venv", "venv"}
 
 
 def iter_text_files() -> list[Path]:
@@ -37,6 +37,8 @@ def iter_text_files() -> list[Path]:
             continue
         if any(part in SKIP_PARTS for part in path.parts):
             continue
+        if path.resolve() == Path(__file__).resolve():
+            continue  # the deny-list itself lives in this file; skip self-scan
         if path.suffix.lower() in {".md", ".py", ".ps1", ".yaml", ".yml", ".txt", ".json", ".gitignore"} or path.name in {"LICENSE", "SECURITY.md"}:
             files.append(path)
     return files
