@@ -194,8 +194,10 @@ def main() -> int:
         log("Today.md holds only placeholders; nothing to dream")
         return 0
 
+    # 日期基准 (2026-11-18): 凌晨做梦蒸馏"昨天" = 运行日-1, 日期一律真实日历
+    dream_date = f"{(dt.date.today() - dt.timedelta(days=1)):%Y-%m-%d}"
     m = re.search(r"Date:\s*(\d{4}-\d{2}-\d{2})", today_text)
-    dream_date = m.group(1) if m else f"{dt.date.today():%Y-%m-%d}"
+    today_is_legacy = bool(m and m.group(1) == dream_date)
     year = dream_date[:4]
     living_path = os.path.join(brain, "Living", f"{year}.md")
     reflection_path = os.path.join(brain, "Reflection.md")
@@ -223,10 +225,9 @@ def main() -> int:
     with open(os.path.join(brain, "Living", f"Today-{dream_date}.md"), "w",
               encoding="utf-8") as fh:
         fh.write(today_text)
-    next_day = (dt.datetime.strptime(dream_date, "%Y-%m-%d").date()
-                + dt.timedelta(days=1))
-    with open(today_path, "w", encoding="utf-8") as fh:
-        fh.write(fresh_today(f"{next_day:%Y-%m-%d}"))
+    if today_is_legacy:
+        with open(today_path, "w", encoding="utf-8") as fh:
+            fh.write(fresh_today(f"{dt.date.today():%Y-%m-%d}"))
 
     try:
         subprocess.run(["git", "add", "-A"], cwd=str(home), check=True, timeout=60)
