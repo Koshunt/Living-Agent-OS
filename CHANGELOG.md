@@ -3,6 +3,8 @@
 ## v0.2 — 2026-11-17 (backported from a production deployment)
 
 - [feature] `Bridge/dream.py` + `Bridge/dream.sh`: nightly pure-API memory consolidation — distill `Today.md` into `Brain/Living/{year}.md` and `Brain/Reflection.md`, archive the day, reset `Today.md`, commit and push. Idempotent by date, failure-safe, per-model retry chain.
+- [fix] Dream dates follow the real calendar: the 凌晨 (early-morning) run distills **yesterday** (run date − 1) regardless of the stale `Date:` field in `Today.md`, and only resets `Today.md` when it still holds yesterday's content — a 凌晨 note written after midnight stays with its own calendar day.
+- [fix] Three-source merge: the dream distills the rollover's full-day backup (`Brain/.backups/{yesterday}.md` — written by `daily_rollover.py` before its reset) plus the previous archive plus any legacy `Today.md`, so notes written during the day are distilled even though the rollover resets `Today.md` before the dream runs. Room sections are upserted (re-distill replaces) instead of skip-if-exists, and never touch a same-date `Daily Rollover` raw entry.
 - [feature] `agent_note_today` MCP tool: append one timestamped line to `Brain/Today.md` (direct write — Today is ephemeral; durable memory still requires proposal + confirmation).
 - [feature] `agent_recall` + `agent_read_lines` MCP tools: full-text memory search over `Brain/**/*.md` (Latin word-boundary + CJK bigram scoring) and exact-region reading.
 - [feature] `Bridge/sync.sh`: incremental cron sync (stale-rebase abort, host-tagged auto commit, pull --rebase, push).

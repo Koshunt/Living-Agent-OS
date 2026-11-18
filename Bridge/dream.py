@@ -141,24 +141,37 @@ Each entry is one concise bullet.
 {reflection_tail}"""
 
 
-def append_dated(path: str, date: str, entries: list[str],
-                 file_header: str | None = None) -> bool:
-    """Append a dated section. Idempotent: skip if the date already exists.
+def upsert_dated(path: str, date: str, entries: list[str],
+                 file_header: str | None = None) -> str:
+    """Write the dated section: replace the whole section if it already
+    exists (new daytime notes can be re-distilled incrementally), append
+    if missing. Only touches its own 'Nightly Dream' heading — a
+    'Daily Rollover' raw entry for the same date is left untouched.
 
     Matches daily_rollover.py's archive format: files under Living/ start
     with a '# {year}' title, dated sections are preceded by a blank line.
     """
-    if entries and f"## {date}" in read(path):
-        log(f"skip {os.path.basename(path)}: {date} section already present")
-        return False
-    if file_header and not os.path.exists(path):
-        with open(path, "a", encoding="utf-8") as fh:
-            fh.write(f"# {file_header}\n")
-    with open(path, "a", encoding="utf-8") as fh:
-        fh.write(f"\n\n## {date}: Nightly Dream\n\n")
-        for entry in entries:
-            fh.write(f"- {str(entry).strip()}\n")
-    return True
+    text = read(path)
+    lines = text.splitlines() if text else []
+    own_heading = f"## {date}: Nightly Dream"
+    block = [own_heading] + [f"- {str(e).strip()}" for e in entries]
+    start = next((i for i, ln in enumerate(lines) if ln.startswith(own_heading)), None)
+    if start is None:
+        if file_header and not lines:
+            lines = [f"# {file_header}", ""]
+        if lines:
+            lines += ["", ""] + block
+        else:
+            lines = block
+        action = "appended"
+    else:
+        end = next((i for i in range(start + 1, len(lines)) if lines[i].startswith("## ")),
+                   len(lines))
+        lines[start:end] = block
+        action = "replaced"
+    with open(path, "w", encoding="utf-8") as fh:
+        fh.write("\n".join(lines).rstrip() + "\n")
+    return action
 
 
 def main() -> int:
@@ -189,15 +202,25 @@ def main() -> int:
     except Exception as exc:
         log(f"warn git pull failed ({exc}); continuing on local copy")
 
-    today_text = read(today_path)
-    if not today_text or not has_content(today_text):
-        log("Today.md holds only placeholders; nothing to dream")
-        return 0
-
     # 日期基准 (2026-11-18): 凌晨做梦蒸馏"昨天" = 运行日-1, 日期一律真实日历
+    # 三源合并: ①rollover的完整昨日备份(Brain/.backups/{昨天}.md) ②已归档旧版 ③Today仍是昨天时的遗留
     dream_date = f"{(dt.date.today() - dt.timedelta(days=1)):%Y-%m-%d}"
-    m = re.search(r"Date:\s*(\d{4}-\d{2}-\d{2})", today_text)
+    legacy_raw = read(today_path)
+    m = re.search(r"Date:\s*(\d{4}-\d{2}-\d{2})", legacy_raw)
     today_is_legacy = bool(m and m.group(1) == dream_date)
+    backup_text = read(os.path.join(brain, ".backups", f"{dream_date}.md"))
+    old_archive = read(os.path.join(brain, "Living", f"Today-{dream_date}.md"))
+    merged_lines, seen = [], set()
+    for src in (backup_text, old_archive, legacy_raw if today_is_legacy else ""):
+        for ln in src.splitlines():
+            k = ln.strip()
+            if k and k not in seen:
+                seen.add(k)
+                merged_lines.append(ln)
+    today_text = ("\n".join(merged_lines).rstrip("\n") + "\n") if merged_lines else ""
+    if not has_content(today_text):
+        log(f"{dream_date}: nothing to dream across all sources")
+        return 0
     year = dream_date[:4]
     living_path = os.path.join(brain, "Living", f"{year}.md")
     reflection_path = os.path.join(brain, "Reflection.md")
@@ -217,9 +240,9 @@ def main() -> int:
         return 0
 
     os.makedirs(os.path.join(brain, "Living"), exist_ok=True)
-    append_dated(living_path, dream_date, living, file_header=year)
+    upsert_dated(living_path, dream_date, living, file_header=year)
     if reflection:
-        append_dated(reflection_path, dream_date, reflection)
+        upsert_dated(reflection_path, dream_date, reflection)
 
     # Archive the day, reset Today.md for tomorrow.
     with open(os.path.join(brain, "Living", f"Today-{dream_date}.md"), "w",

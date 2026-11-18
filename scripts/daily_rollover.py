@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import shutil
 from datetime import date
 from pathlib import Path
 
@@ -64,6 +65,14 @@ This file is short-lived working memory. On the first startup of a new day, mean
 
 
 def archive_today(text: str, entry_date: str) -> Path:
+    # Pre-archive backup: mechanical safety net so the pre-rollover state of
+    # Today.md survives even if later steps fail (the nightly dream merges
+    # this backup back in, see Bridge/dream.py).
+    backup_dir = ROOT / "Brain" / ".backups"
+    backup_dir.mkdir(parents=True, exist_ok=True)
+    backup = backup_dir / f"{entry_date}.md"
+    if not backup.exists():
+        shutil.copyfile(TODAY_PATH, backup)
     year_path = ROOT / "Brain" / "Living" / f"{entry_date[:4]}.md"
     year_path.parent.mkdir(parents=True, exist_ok=True)
     if not year_path.exists():
