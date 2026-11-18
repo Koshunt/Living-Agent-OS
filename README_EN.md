@@ -37,7 +37,7 @@ This template is the result of that work. It's yours now.
 
 ### Way 1: Throw it at your AI (recommended)
 
-```powershell
+```bash
 git clone https://github.com/Koshunt/Living-Agent-OS.git
 ```
 

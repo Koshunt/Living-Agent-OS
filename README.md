@@ -37,7 +37,7 @@
 
 ### 方式一：丢给你的 AI（推荐）
 
-```powershell
+```bash
 git clone https://github.com/Koshunt/Living-Agent-OS.git
 ```
 
