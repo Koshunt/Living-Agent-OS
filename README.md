@@ -38,7 +38,8 @@
 ### 方式一：丢给你的 AI（推荐）
 
 ```powershell
-git clone https://github.com/Koshunt/Living-Agent-OS.git
+git clone https://github.com/Koshunt/Living-Agent-OS.git    # GitHub
+git clone https://atomgit.com/na_th_an/Living-Agent-OS.git  # 国内镜像 (AtomGit, 每日同步)
 ```
 
 然后把整个文件夹路径告诉你的 AI，说这句话：

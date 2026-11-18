@@ -38,7 +38,8 @@ This template is the result of that work. It's yours now.
 ### Way 1: Throw it at your AI (recommended)
 
 ```powershell
-git clone https://github.com/Koshunt/Living-Agent-OS.git
+git clone https://github.com/Koshunt/Living-Agent-OS.git    # GitHub
+git clone https://atomgit.com/na_th_an/Living-Agent-OS.git  # China mirror (AtomGit, synced daily)
 ```
 
 Then tell your AI:
