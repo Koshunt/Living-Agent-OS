@@ -176,6 +176,24 @@ def upsert_dated(path: str, date: str, entries: list[str],
 
 def main() -> int:
     dry = "--dry-run" in sys.argv
+
+    # 开关 (2026-11-18): 默认关闭, 不开启就完全不调API零消耗。
+    # config.json "dream_enabled": true 开启; 环境变量 LIVINGOS_DREAM_ENABLED 可临时覆盖。
+    env_flag = os.environ.get("LIVINGOS_DREAM_ENABLED", "").strip().lower()
+    if env_flag in ("1", "true", "yes", "on"):
+        enabled = True
+    elif env_flag in ("0", "false", "no", "off"):
+        enabled = False
+    else:
+        try:
+            enabled = bool(json.load(open(os.path.join(BRIDGE, "config.json"),
+                                          encoding="utf-8")).get("dream_enabled", False))
+        except Exception:
+            enabled = False
+    if not enabled:
+        log("dream is disabled (dream_enabled=false); zero API cost")
+        return 0
+
     home = resolve_home()
     brain = os.path.join(str(home), "Brain")
     today_path = os.path.join(brain, "Today.md")

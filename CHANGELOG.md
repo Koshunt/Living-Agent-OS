@@ -8,6 +8,7 @@
 - [feature] `agent_note_today` MCP tool: append one timestamped line to `Brain/Today.md` (direct write — Today is ephemeral; durable memory still requires proposal + confirmation).
 - [feature] `agent_recall` + `agent_read_lines` MCP tools: full-text memory search over `Brain/**/*.md` (Latin word-boundary + CJK bigram scoring) and exact-region reading.
 - [feature] `Bridge/sync.sh`: incremental cron sync (stale-rebase abort, host-tagged auto commit, pull --rebase, push).
+- [feature] Dream on/off switch: `dream_enabled` in `config.json` (env `LIVINGOS_DREAM_ENABLED` overrides), **off by default** — a disabled dream makes zero API calls; when on, one light chat-completion per night, empty days exit before any call.
 - [feature] Dreamer host guard: consolidation runs on exactly one machine, configured via `LIVINGOS_DREAM_HOST` / `config.json:dream_host`, suffix-stripped hostname comparison.
 - [fix] Privacy hardening — the template now passes its own publish check for the first time:
   - `scripts/build_agent.py`: chat-role parser genericized (residual personal names removed from the published regex and role mapping)

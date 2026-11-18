@@ -9,14 +9,36 @@ since 2026-08. What follows is the pattern as production hardened it.
 
 1. `git pull --rebase` — fold in what other machines pushed during the day
    (the remote `main` branch is the single source of truth).
-2. Read `Brain/Today.md`. If it holds only placeholders, do nothing.
-3. Distill the day through an OpenAI-compatible chat API:
+2. Read the day's notes (see "Three-source merge" below). If empty, do nothing.
+3. Distill through an OpenAI-compatible chat API:
    - `living` entries → appended to `Brain/Living/{year}.md` as a dated section
    - `reflection` entries → appended to `Brain/Reflection.md`, but only genuine
      lessons phrased as behavior updates
-4. Archive the day to `Brain/Living/Today-{date}.md`, reset `Today.md` for
-   tomorrow.
+4. Archive the day, reset `Today.md`.
 5. Commit and push.
+
+### Enable or disable — and what it costs
+
+The dream is **off by default**: set `"dream_enabled": true` in
+`Bridge/config.json` (or env `LIVINGOS_DREAM_ENABLED=1`) to turn it on, flip
+it back off at any time — a disabled dream makes **zero API calls**.
+
+When enabled, a normal night costs **exactly one light chat-completion** (a
+day with no notes exits before any call). The rollover resets cost nothing —
+they are pure local file operations.
+
+### Three-source merge
+
+Since the rollover resets `Today.md` before the dream runs, the dream merges
+three sources so nothing written during the day is missed:
+
+1. `Brain/.backups/{yesterday}.md` — the rollover's full-day backup
+2. the previous `Today-{yesterday}.md` archive, if any
+3. `Today.md` itself, when it still holds yesterday's date (rollover never ran)
+
+Room sections are **upserted**: re-distilling a date replaces that date's
+`Nightly Dream` section instead of skipping, so notes added later still make
+it in. A same-date `Daily Rollover` raw entry is never touched.
 
 ### The dream contract
 
