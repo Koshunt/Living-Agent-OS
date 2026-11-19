@@ -343,26 +343,33 @@ def note_today(home: Path, note: str) -> dict[str, Any]:
     writes directly without a proposal. Durable memory still requires
     create_proposal + apply_proposal with explicit user confirmation.
     """
+    import fcntl
     today_path = safe_path(home, "Brain/Today.md")
-    stamp = datetime.now().strftime("%H:%M")
-    line = f"- [{stamp}] {note.strip()}"
-    marker = "## Current State"
-    if today_path.is_file():
-        lines = today_path.read_text(encoding="utf-8").splitlines()
-    else:
-        lines = ["# Today", "", f"Date: {date.today():%Y-%m-%d}", "", marker]
-    try:
-        start = next(i for i, ln in enumerate(lines) if ln.strip() == marker)
-    except StopIteration:
-        lines += ["", marker, line]
-    else:
-        end = next(
-            (i for i in range(start + 1, len(lines)) if lines[i].startswith("## ")),
-            len(lines),
-        )
-        lines.insert(end, line)
-    text = "\n".join(lines).rstrip() + "\n"
-    today_path.write_text(text, encoding="utf-8")
+    lock_path = safe_path(home, "Brain/.today.lock")
+    with lock_path.open("w") as lock_handle:
+        # Multiple machines and multiple agent instances write this file through
+        # sync; the lock serializes same-machine writers. Cross-machine conflicts
+        # are resolved by the union merge driver (see .gitattributes).
+        fcntl.flock(lock_handle, fcntl.LOCK_EX)
+        stamp = datetime.now().strftime("%H:%M")
+        line = f"- [{stamp}] {note.strip()}"
+        marker = "## Current State"
+        if today_path.is_file():
+            lines = today_path.read_text(encoding="utf-8").splitlines()
+        else:
+            lines = ["# Today", "", f"Date: {date.today():%Y-%m-%d}", "", marker]
+        try:
+            start = next(i for i, ln in enumerate(lines) if ln.strip() == marker)
+        except StopIteration:
+            lines += ["", marker, line]
+        else:
+            end = next(
+                (i for i in range(start + 1, len(lines)) if lines[i].startswith("## ")),
+                len(lines),
+            )
+            lines.insert(end, line)
+        text = "\n".join(lines).rstrip() + "\n"
+        today_path.write_text(text, encoding="utf-8")
     return {"status": "ok", "chars": len(text)}
 
 

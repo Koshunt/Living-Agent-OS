@@ -107,11 +107,24 @@ what would go out. Mechanical `sync(host): auto` commits are the one
 exception to the commit-approval rule in `AGENTS.md`; they carry only
 Today-style increments, never reviewed code or durable-memory edits.
 
+### Union merge for append-only logs
+
+`Today.md`, `Living/{year}.md` and the daily archive files are append-only
+logs written by several machines. Replace semantics on them is data loss.
+`.gitattributes` therefore declares `merge=union` for these paths: when two
+machines diverge, git keeps **both** sides' added lines. Caveats: identical
+lines added on both sides may duplicate (harmless - the dream and room
+parsers group by date section); deletions do not propagate (intended -
+memory only shrinks via reviewed distillation, never via sync). The rollover
+runs `git pull --rebase` before archiving so it always works on the merged
+view, and snapshots `Today.md` before any reset as the last safety net.
+
 ## Retrieval
 
 `agent_recall` (full-text over `Brain/**/*.md`, Latin words and CJK bigrams)
 plus `agent_read_lines` (exact region) are how a session finds any memory
 without reading every file. Plain scan, no index to go stale.
+
 
 ## Ops lessons (each one cost a real incident)
 
@@ -128,3 +141,15 @@ without reading every file. Plain scan, no index to go stale.
    fetch layer fails, do not cache the empty result; fail loudly instead.
 5. **Prefer idempotent, append-only writes for anything unattended.** The
    dream may crash at any step; every step must be safe to redo.
+6. **A shared mutable file needs a merge policy, not luck.** `Today.md` is
+   written by every machine and rolled over locally; `pull --rebase` on two
+   divergent versions is whole-file replacement, and notes written on one
+   machine silently vanished when the other pushed a rolled-over template.
+   Fix: `Brain/Today.md merge=union` in `.gitattributes` (append-only log
+   semantics - additions from both sides survive, deletions are not
+   expressed), plus the rollover snapshots before any reset.
+7. **A reset without a snapshot is data loss with extra steps.** The
+   rollover's undated/empty branch used to reset `Today.md` without writing
+   `.backups/`; a stale `Date:` field plus that branch can swallow a whole
+   day. Fix: every reset path snapshots first (`undated-{time}.md`), and
+   `note_today` runs the rollover only after the snapshot safety net exists.

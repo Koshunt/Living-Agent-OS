@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import re
 import shutil
-from datetime import date
+import subprocess
+from datetime import date, datetime
 from pathlib import Path
 
 
@@ -84,6 +85,21 @@ def archive_today(text: str, entry_date: str) -> Path:
 
 
 def rollover(current_date: str | None = None) -> tuple[bool, str]:
+    import fcntl
+    lock_path = ROOT / "Brain" / ".today.lock"
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    with lock_path.open("w") as lock_handle:
+        fcntl.flock(lock_handle, fcntl.LOCK_EX)
+        # Pull before archiving: absorb other machines' increments first so the
+        # rollover never archives onto a stale view (2026-11 multi-machine lesson).
+        try:
+            subprocess.run(["git", "pull", "--rebase", "-q"], cwd=ROOT,
+                           timeout=60, capture_output=True)
+        except Exception:
+            pass  # offline is fine - the local snapshot below still prevents loss
+        return _rollover_locked(current_date)
+
+def _rollover_locked(current_date: str | None = None) -> tuple[bool, str]:
     today = current_date or date.today().isoformat()
     if not TODAY_PATH.exists():
         TODAY_PATH.write_text(fresh_today(today), encoding="utf-8", newline="\n")
@@ -98,7 +114,14 @@ def rollover(current_date: str | None = None) -> tuple[bool, str]:
         archive_today(text, previous)
         action = f"archived {previous}"
     else:
-        action = "reset undated or empty state"
+        # Snapshot before wiping, even for undated/empty files: a reset without
+        # a snapshot once silently dropped a day of notes (2026-11 lesson).
+        import datetime as _dt
+        backup_dir = ROOT / "Brain" / ".backups"
+        backup_dir.mkdir(parents=True, exist_ok=True)
+        stamp = _dt.datetime.now().strftime("%H%M%S")
+        (backup_dir / f"undated-{stamp}.md").write_text(text, encoding="utf-8")
+        action = "reset undated or empty state (snapshotted)"
     TODAY_PATH.write_text(fresh_today(today), encoding="utf-8", newline="\n")
     return True, action
 
