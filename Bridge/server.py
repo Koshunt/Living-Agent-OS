@@ -257,6 +257,34 @@ def agent_git_status(params: StatusInput) -> str:
 
 
 @mcp.tool(
+    name="agent_time",
+    annotations=ToolAnnotations(
+        title="Current Server Time",
+        readOnlyHint=True,
+        destructiveHint=False,
+        idempotentHint=False,
+        openWorldHint=False,
+    ),
+)
+def agent_time() -> str:
+    """Current server local time (NTP-synced). Zero-cost clock: ISO date/time, weekday, unix ts."""
+    from datetime import datetime
+    now = datetime.now().astimezone()
+    wd_en = "Mon Tue Wed Thu Fri Sat Sun".split()[now.weekday()]
+    wd_zh = "周" + "一二三四五六日"[now.weekday()]
+    return as_json({
+        "iso": now.isoformat(timespec="seconds"),
+        "date": now.strftime("%Y-%m-%d"),
+        "time": now.strftime("%H:%M:%S"),
+        "weekday_en": wd_en,
+        "weekday_zh": wd_zh,
+        "unix": int(now.timestamp()),
+        "tz": now.strftime("%z"),
+        "note": "server local time, NTP-synced"
+    })
+
+
+@mcp.tool(
     name="agent_propose_memory",
     annotations=ToolAnnotations(title="Create A Reviewable Memory Proposal", readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=False),
 )
