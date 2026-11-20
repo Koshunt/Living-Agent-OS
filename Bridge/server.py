@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+
 import importlib
 import subprocess
 import sys
@@ -164,8 +166,23 @@ def agent_wake(params: WakeInput) -> str:
     Safely checks GitHub, fast-forward pulls only when allowed, rolls daily memory,
     regenerates runtime bundles, and returns the current boot and Today context.
     It never commits, pushes, resolves conflicts, or overwrites a dirty worktree.
+    The response carries server_time (NTP-synced local clock) so every session
+    starts with an authoritative timestamp at zero extra cost.
     """
-    return as_json(wake(resolve_home(), auto_sync=params.auto_sync))
+    result = json.loads(as_json(wake(resolve_home(), auto_sync=params.auto_sync)))
+    from datetime import datetime
+    now = datetime.now().astimezone()
+    result["server_time"] = {
+        "iso": now.isoformat(timespec="seconds"),
+        "date": now.strftime("%Y-%m-%d"),
+        "time": now.strftime("%H:%M:%S"),
+        "weekday_en": "Mon Tue Wed Thu Fri Sat Sun".split()[now.weekday()],
+        "weekday_zh": "周" + "一二三四五六日"[now.weekday()],
+        "unix": int(now.timestamp()),
+        "tz": now.strftime("%z"),
+        "note": "server local time, NTP-synced"
+    }
+    return as_json(result)
 
 
 @mcp.tool(
