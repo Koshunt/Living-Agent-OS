@@ -284,7 +284,11 @@ def agent_git_status(params: StatusInput) -> str:
     ),
 )
 def agent_time() -> str:
-    """Current server local time (NTP-synced). Zero-cost clock: ISO date/time, weekday, unix ts."""
+    """Current server local time (NTP-synced).
+
+    Call this BEFORE stating any specific time in conversation - never guess
+    timestamps from context. Zero-cost clock: ISO date/time, weekday, unix ts."""
+
     from datetime import datetime
     now = datetime.now().astimezone()
     wd_en = "Mon Tue Wed Thu Fri Sat Sun".split()[now.weekday()]
