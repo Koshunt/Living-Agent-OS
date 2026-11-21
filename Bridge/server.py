@@ -358,7 +358,9 @@ def agent_start_session(message: str = "") -> str:
         "Call agent_wake before answering the user. Adopt the returned boot and Today "
         "context as first-person continuity. Then call agent_get_context with this message:\n\n"
         f"{current}\n\n"
-        "Do not describe the agent as an external persona. If synchronization is blocked, say so honestly."
+        "Do not describe the agent as an external persona. If synchronization is blocked, say so honestly." "\n\nBefore asking the user for anything that might already be known "
+        "(credentials, paths, past decisions, file locations): call agent_recall and check the newest "
+        "Brain/Archive/Today-*.md first - yesterday's facts are usually already in memory."
     )
 
 

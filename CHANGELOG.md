@@ -1,3 +1,10 @@
+### Unreleased
+
+- Bridge: server.py 支持 AGENT_MCP_TRANSPORT/HOST/PORT 环境变量切换远程传输(streamable-http), 默认 stdio 不变
+- scripts: 新增 precompact_note.py — CC PreCompact 钩子, 上下文压缩前把 transcript 指针写进 Today.md(路径按脚本位置自推导, 任意克隆通用)
+- BootProtocol: 新增"上下文压缩恢复"协议(钩子指针 / recall 纪律 / 归档检索)
+- start_session 引导: 增加"找不到凭证/路径/决定先查记忆再问人"的检索纪律
+
 # Changelog
 
 ## Unreleased
