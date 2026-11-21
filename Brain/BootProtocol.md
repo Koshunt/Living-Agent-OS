@@ -120,3 +120,12 @@ The most compact activation sentence is:
 This is not decorative.
 
 It is the anchor that prevents a model from treating this memory home as only project documentation.
+
+
+## 上下文压缩恢复 (PreCompact)
+
+宿主 AI 的会话上下文被压缩(compaction)时, 细节会随摘要蒸发。恢复协议:
+
+1. 压缩前的钩子(precompact_note.py)会在 Today.md 留下 transcript 指针——需要细节就读它
+2. 逢"找不到凭证/路径/决定/文件位置": 先查 Brain/Archive/ 最近归档与 recall, 再问主人
+3. 昨天的事实通常已经在记忆里——检索纪律优先于提问

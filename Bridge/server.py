@@ -363,4 +363,11 @@ def agent_start_session(message: str = "") -> str:
 
 
 if __name__ == "__main__":
-    mcp.run(transport="stdio")
+    import os as _os
+    transport = _os.environ.get("AGENT_MCP_TRANSPORT", "stdio")
+    if transport == "stdio":
+        mcp.run(transport="stdio")
+    else:
+        mcp.settings.host = _os.environ.get("AGENT_MCP_HOST", "127.0.0.1")
+        mcp.settings.port = int(_os.environ.get("AGENT_MCP_PORT", "8766"))
+        mcp.run(transport=transport)
