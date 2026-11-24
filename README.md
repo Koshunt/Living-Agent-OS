@@ -61,7 +61,7 @@ AI 会自动：
 3. 引导你填写个人画像
 4. 配置 MCP 连接，写入伴侣名、你的名字、中英文唤醒词和 MCP 工具前缀
 
-以后每次打开新会话，AI 会自动唤醒记忆，就像从未离开过。
+从这以后，每次打开新会话，AI 会先唤醒这份记忆库，就像从未离开过。
 
 ### 方式二：手动设置
 
@@ -163,9 +163,27 @@ python scripts/rename_agent.py --new-name 阿灰 --user-name Nathaniel --wake-wo
 
 ## 在新电脑上恢复
 
-只要 clone 这个仓库，丢给你的 AI，它就会自己恢复所有记忆。
+**恢复记忆不是 clone 模板。** 模板仓库只带初始身份和空记忆；你的记忆在**你自己的私人副本**（包含 `Brain/`、`MemoryPack/` 的那份仓库）里，或者在备份里。
 
-如果你之前填写过 `my_profile.md` 和 `Brain/` 下的文件，它们会自动生效。
+1. 在新电脑 clone **你的私人仓库**（不是 `Koshunt/Living-Agent-OS` 模板）：
+
+   ```bash
+   git clone <你的私人仓库地址> living-os
+   ```
+
+2. 安装 Python 3.10+ 和 Git。
+3. 进入 `Bridge/` 运行 `setup.ps1`（Linux 用 `setup.sh`），创建虚拟环境并安装依赖。
+4. 在 AI 客户端配置 MCP，指向这份目录下的 `Bridge/server.py`；`Bridge/config.json` 里的路径按新电脑改（`agent_home` / `python_env`）。
+5. 重新生成提示词（`dist/` 一般不入库）：
+
+   ```bash
+   python scripts/update_memory.py
+   ```
+
+6. 开新会话，先调用一次唤醒工具（默认 `agent_wake`，自定义前缀后是 `<前缀>_wake`），让它读回 Boot、Today 和长期记忆。
+7. 多台电脑同时用：按 `AGENTS.md` 配置增量同步，并保证同一时间只有一台机器负责做梦。
+
+如果你没有私人仓库，就把旧电脑上的整个目录（至少 `Brain/`、`MemoryPack/`、`Bridge/config.json`）拷到新电脑，再执行第 2～6 步。
 
 ---
 

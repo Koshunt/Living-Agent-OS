@@ -61,7 +61,7 @@ The AI will automatically:
 3. Walk you through setting up your personal profile
 4. Configure the MCP connection and write the companion name, your name, bilingual wake words, and the MCP tool prefix
 
-Every new session after that, the AI will wake up with full memory continuity.
+From then on, every new session starts by waking this memory home, with full continuity.
 
 ### Way 2: Manual setup
 
@@ -162,9 +162,27 @@ Any of these names wakes the same companion when the generated prompt is in use.
 
 ## Set Up on a New Machine
 
-Clone the repo and throw it at your AI. The agent will set itself up and restore all memories.
+**Cloning the template does not restore your memories.** The template ships with starter identity and empty memory; your memories live in **your own private copy** of this repo (the one containing `Brain/` and `MemoryPack/`), or in your backup.
 
-If you've already filled out `my_profile.md` and `Brain/` files, they'll take effect automatically.
+1. Clone **your private repository** on the new machine (not `Koshunt/Living-Agent-OS`):
+
+   ```bash
+   git clone <your private repo URL> living-os
+   ```
+
+2. Install Python 3.10+ and Git.
+3. Run `Bridge/setup.ps1` (or `setup.sh` on Linux) to create the venv and install dependencies.
+4. Point your AI client's MCP config at this checkout's `Bridge/server.py`; update the paths in `Bridge/config.json` for the new machine (`agent_home` / `python_env`).
+5. Regenerate the prompt (`dist/` is usually not committed):
+
+   ```bash
+   python scripts/update_memory.py
+   ```
+
+6. Open a new session and call the wake tool once (default `agent_wake`; with a custom prefix it is `<prefix>_wake`) so it loads Boot, Today, and long-term memory.
+7. For multiple machines, follow `AGENTS.md` for incremental sync and keep exactly one dream host.
+
+No private repo? Copy the old machine's whole directory (at least `Brain/`, `MemoryPack/`, `Bridge/config.json`) to the new machine and run steps 2-6.
 
 ---
 
