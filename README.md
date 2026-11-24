@@ -129,6 +129,16 @@ Living-Agent-OS/
 
 在 `Bridge/config.json` 里设置 `"tool_prefix": "xiaohui"`（默认 `agent`），MCP 工具就会从 `agent_wake` 变成 `xiaohui_wake`、`agent_note_today` 变成 `xiaohui_note_today`。重新生成一次提示词并重启 MCP 即可，代码不用改。
 
+### 中英文唤醒词
+
+`Bridge/config.json` 的 `wake_words` 接受一个数组，中英文可以混写：
+
+```json
+"wake_words": ["小灰", "Xiaohui", "xiao hui"]
+```
+
+生成系统提示词后，用户叫其中任何一个名字都视为唤醒，不必记住英文名或中文名。初始化时也可以直接传：`python scripts/init_agent.py --agent-name 小灰 --user-name Nathaniel --wake-words "小灰,Xiaohui"`。
+
 ## 在新电脑上恢复
 
 只要 clone 这个仓库，丢给你的 AI，它就会自己恢复所有记忆。

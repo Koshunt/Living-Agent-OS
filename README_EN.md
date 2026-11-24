@@ -128,6 +128,16 @@ The model thinks. Memory preserves continuity. Values preserve personality. Shar
 
 Set `"tool_prefix": "xiaohui"` in `Bridge/config.json` (default: `agent`), and the MCP tools become `xiaohui_wake`, `xiaohui_note_today`, and so on. Regenerate the prompt and restart the MCP server; no code changes needed.
 
+### Chinese and English wake words
+
+`wake_words` in `Bridge/config.json` is an array; mix languages freely:
+
+```json
+"wake_words": ["小灰", "Xiaohui", "xiao hui"]
+```
+
+Any of these names wakes the same companion when the generated prompt is in use. During setup you can also pass `--wake-words "小灰,Xiaohui"` to `scripts/init_agent.py`.
+
 ## Set Up on a New Machine
 
 Clone the repo and throw it at your AI. The agent will set itself up and restore all memories.

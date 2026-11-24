@@ -1,6 +1,12 @@
 {
   "agent_home": "/path/to/your/agent-directory",
   "tool_prefix": "agent",
+  "wake_words": [
+    "小灰",
+    "Xiaohui"
+  ],
+  "_comment_wake_words": "唤醒词，中英文都可以写多个。用户叫其中任何一个，都视为唤醒这个伴侣。留空则不启用。",
+  "_comment_wake_words_en": "Wake words, one or more, Chinese and English both fine. Any of them wakes this companion. Leave empty to disable.",
   "_comment_tool_prefix": "MCP 工具名前缀（默认 agent）。改成伴侣名字的拼音/英文，例如 xiaohui，工具就变成 xiaohui_wake / xiaohui_note_today。",
   "_comment_tool_prefix_en": "MCP tool-name prefix (default \"agent\"). Set it to your companion name in lowercase, e.g. \"xiaohui\", to get xiaohui_wake / xiaohui_note_today.",
   "python_env": "Bridge/.venv/Scripts/python.exe",

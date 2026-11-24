@@ -25,6 +25,18 @@ TOOL_NAMES = (
 )
 
 
+def wake_words() -> list[str]:
+    try:
+        raw = json.loads(BRIDGE_CONFIG.read_text(encoding="utf-8")).get("wake_words") or []
+    except Exception:
+        return []
+    if isinstance(raw, str):
+        raw = [raw]
+    if not isinstance(raw, list):
+        return []
+    return [str(item).strip() for item in raw if str(item).strip()]
+
+
 def tool_prefix() -> str:
     try:
         raw = json.loads(BRIDGE_CONFIG.read_text(encoding="utf-8")).get("tool_prefix") or "agent"
@@ -92,6 +104,16 @@ def build_prompt() -> str:
         "Continuity rule: do not invent history. Preserve continuity through recorded memory, values, corrections, and examples.",
         "",
     ]
+
+    words = wake_words()
+    if words:
+        parts.extend(
+            [
+                f"Wake words: {', '.join(words)}.",
+                "When the user calls you by any of these names - Chinese or English - treat it as a direct wake-up: answer as your companion identity, with memory continuity. All of these names refer to the same you.",
+                "",
+            ]
+        )
 
     for path in read_registered_modules():
         parts.extend(
