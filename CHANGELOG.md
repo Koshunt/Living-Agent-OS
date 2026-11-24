@@ -12,6 +12,9 @@
 - [fix] `daily_rollover.py`: the undated/empty reset branch now snapshots `Today.md` (`undated-{time}.md`) before wiping - a stale `Date:` field plus that branch could silently drop a whole day of notes.
 - [fix] `agent_note_today` and the rollover take a file lock (`Brain/.today.lock`); multiple agent instances on one machine no longer overwrite each other's notes.
 - [fix] The rollover pulls before archiving, so it never archives onto a stale view of `Living/{year}.md`.
+- [feature] `scripts/rename_agent.py`: rename an initialized companion without reinstalling — updates identity/instruction files, wake words and tool prefix, regenerates the prompt, and leaves `Brain/Living` / archive history untouched.
+- [fix] `init_agent.py` now also overwrites the template's literal `TestAgent` / `TestUser` placeholders and the Identity fields, so a fresh clone really adopts the requested name.
+- [docs] README quick start now passes name, user, bilingual wake words and tool prefix to the agent; new "rename your companion" section is copy-paste ready.
 - [fix] `init_agent.py` now replaces `{{AGENT_NAME}}` / `{{USER_NAME}}` across every Markdown file under `Brain/` and `MemoryPack/`, not just Identity and WelcomeHome (BootProtocol previously kept raw placeholders).
 - [feature] `init_agent.py --tool-prefix xiaohui` writes `tool_prefix` during setup; unset prefixes default to an ASCII slug of the agent name, else `agent`.
 - [feature] Bilingual wake words: `wake_words` in `Bridge/config.json` accepts any mix of Chinese/English names (e.g. `["小灰","Xiaohui"]`); the generated system prompt tells the companion that every listed name wakes the same identity. `init_agent.py --wake-words "小灰,Xiaohui"` writes it during setup.

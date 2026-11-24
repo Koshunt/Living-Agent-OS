@@ -47,15 +47,19 @@ git clone https://github.com/Koshunt/Living-Agent-OS.git
 git clone https://atomgit.com/na_th_an/Living-Agent-OS.git
 ```
 
-然后把整个文件夹路径告诉你的 AI，说这句话：
+然后把整个文件夹路径告诉你的 AI，说这段话（把尖括号里的内容换成你的）：
 
-> **这是 Living-Agent-OS 模板，我刚 clone 下来的。请帮我完成初始化设置：运行 Bridge 的 setup.ps1，配置 MCP，读取我的画像引导我填写 my_profile.md。**
+> **这是 Living-Agent-OS 模板，我刚 clone 下来的。请帮我完成初始化：**
+> **1. 运行 `Bridge/setup.ps1`（Linux 用 `Bridge/setup.sh`），配置 MCP。**
+> **2. 引导我填写 `my_profile.md`。**
+> **3. 用 `python scripts/init_agent.py --agent-name "<伴侣名>" --user-name "<怎么称呼我>" --wake-words "<中文名,English>" --tool-prefix <英文前缀>` 初始化身份。**
+> **4. 重新生成提示词，并把 `Bridge/Agent-Bootstrap-Prompt.md` 加到我的 AI 客户端 System Prompt。**
 
 AI 会自动：
 1. 检测 Python → 没有就下载 embeddable Python
 2. 创建虚拟环境 → 安装依赖 → 运行测试
 3. 引导你填写个人画像
-4. 配置 MCP 连接
+4. 配置 MCP 连接，写入伴侣名、你的名字、中英文唤醒词和 MCP 工具前缀
 
 以后每次打开新会话，AI 会自动唤醒记忆，就像从未离开过。
 
@@ -90,20 +94,20 @@ setup.ps1 会自动完成所有环境配置。完成后：
 Living-Agent-OS/
 ├── Brain/                    # 身份、价值观、每日记忆
 │   ├── BootProtocol.md       # 第一人称激活
-│   ├── Identity.md           # Agent 是谁
-│   ├── Relationship.md       # 和你的关系
-│   ├── CoreValues.md         # 它在乎什么
-│   └── Today.md              # 每日记忆（自动滚动）
-├── MemoryPack/               # 长期记忆和知识
-├── scripts/                  # 构建、导入、管理
+│   ├── Immutable/            # Identity / Relationship / CoreValues
+│   ├── Promises.md           # 约定
+│   ├── Home.md / Voice.md    # 回家与说话方式
+│   ├── Today.md              # 每日记忆（自动滚动）
+│   └── Living/YYYY.md        # 年度长期记忆（历史不改写）
+├── MemoryPack/               # 长期记忆、人格、知识
+├── config/prompt.yaml        # 系统提示词装配清单
+├── scripts/                  # init_agent / rename_agent / update_memory 等
 ├── templates/                # 空白起始文件
 ├── Bridge/                   # MCP 服务器（连接 AI 和文件系统）
-│   ├── server.py             # MCP 服务（自动安装依赖）
+│   ├── server.py             # MCP 服务（工具名跟随 tool_prefix）
 │   ├── bridge_core/          # 核心逻辑
-│   ├── setup.ps1             # 一键环境配置 (Windows)
-│   ├── setup.sh              # 一键环境配置 (Linux)
-│   ├── run_mcp.cmd           # 启动 MCP 服务器 (Windows)
-│   ├── run_mcp.sh            # 启动 MCP 服务器 (Linux)
+│   ├── config.example.json   # 配置样例：tool_prefix / wake_words / dream
+│   ├── setup.ps1 / setup.sh  # 一键环境配置
 │   └── Agent-Bootstrap-Prompt.md  # Agent 启动指令
 ├── my_profile.md             # 你的画像（填这个！）
 └── dist/                     # 生成的 prompt 输出
@@ -128,6 +132,24 @@ Living-Agent-OS/
 ### 工具名跟着伴侣走
 
 在 `Bridge/config.json` 里设置 `"tool_prefix": "xiaohui"`（默认 `agent`），MCP 工具就会从 `agent_wake` 变成 `xiaohui_wake`、`agent_note_today` 变成 `xiaohui_note_today`。初始化时也可以直接传：`python scripts/init_agent.py --agent-name 小灰 --user-name Nathaniel --tool-prefix xiaohui`。重新生成一次提示词并重启 MCP 即可，代码不用改。
+
+### 更换伴侣名字
+
+已经初始化过也能改名，不用重装。有两种方式：
+
+**让 AI 自己改：**
+
+> **请帮我把伴侣改名。先读 `Brain/Immutable/Identity.md` 确认当前名字，然后运行：**
+> **`python scripts/rename_agent.py --new-name "<新名字>" --user-name "<怎么称呼我>" --wake-words "<新名字,English>" --tool-prefix <英文前缀>`**
+> **它会更新身份和说明书文件、写回 `Bridge/config.json`、重新生成提示词；`Brain/Living` 和归档里的历史名字不会被改写。改完重启 MCP。**
+
+**自己跑：**
+
+```bash
+python scripts/rename_agent.py --new-name 阿灰 --user-name Nathaniel --wake-words "阿灰,Ahui" --tool-prefix ahui
+```
+
+改完重启 MCP / 开新会话，新的提示词才会生效。
 
 ### 中英文唤醒词
 

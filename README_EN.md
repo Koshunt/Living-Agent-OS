@@ -47,15 +47,19 @@ In China:
 git clone https://atomgit.com/na_th_an/Living-Agent-OS.git
 ```
 
-Then tell your AI:
+Then tell your AI (replace the bracketed parts):
 
-> **This is the Living-Agent-OS template I just cloned. Please initialize it: run Bridge\setup.ps1, configure MCP, and guide me through filling out my profile.**
+> **This is the Living-Agent-OS template I just cloned. Please set it up:**
+> **1. Run `Bridge/setup.ps1` (use `Bridge/setup.sh` on Linux) and configure MCP.**
+> **2. Guide me through `my_profile.md`.**
+> **3. Initialize the identity with `python scripts/init_agent.py --agent-name "<companion>" --user-name "<what to call me>" --wake-words "<Chinese name,English name>" --tool-prefix <ascii-prefix>`.**
+> **4. Regenerate the prompt and add `Bridge/Agent-Bootstrap-Prompt.md` to my AI client's System Prompt.**
 
 The AI will automatically:
 1. Detect Python → download embedded Python if not found
 2. Create a virtual env → install dependencies → run tests
 3. Walk you through setting up your personal profile
-4. Configure the MCP connection
+4. Configure the MCP connection and write the companion name, your name, bilingual wake words, and the MCP tool prefix
 
 Every new session after that, the AI will wake up with full memory continuity.
 
@@ -89,20 +93,20 @@ After setup completes:
 Living-Agent-OS/
 ├── Brain/                    # Identity, values, daily memory
 │   ├── BootProtocol.md       # First-person activation
-│   ├── Identity.md           # Who the agent is
-│   ├── Relationship.md       # How it relates to you
-│   ├── CoreValues.md         # What it cares about
-│   └── Today.md              # Daily memory (rolls over)
-├── MemoryPack/               # Long-term memory & knowledge
-├── scripts/                  # Build, import, manage
+│   ├── Immutable/            # Identity / Relationship / CoreValues
+│   ├── Promises.md           # Promises
+│   ├── Home.md / Voice.md    # Homecoming and voice
+│   ├── Today.md              # Daily memory (rolls over)
+│   └── Living/YYYY.md        # Yearly long-term memory (history is never rewritten)
+├── MemoryPack/               # Long-term memory, persona, knowledge
+├── config/prompt.yaml        # System-prompt assembly list
+├── scripts/                  # init_agent / rename_agent / update_memory, etc.
 ├── templates/                # Starter files
 ├── Bridge/                   # MCP server (connects AI to filesystem)
-│   ├── server.py             # MCP service (auto-installs dependencies)
+│   ├── server.py             # MCP service (tool names follow tool_prefix)
 │   ├── bridge_core/          # Core logic
-│   ├── setup.ps1             # One-click env setup (Windows)
-│   ├── setup.sh              # One-click env setup (Linux)
-│   ├── run_mcp.cmd           # Launch the MCP server (Windows)
-│   ├── run_mcp.sh            # Launch the MCP server (Linux)
+│   ├── config.example.json   # Sample: tool_prefix / wake_words / dream
+│   ├── setup.ps1 / setup.sh  # One-click env setup
 │   └── Agent-Bootstrap-Prompt.md  # Agent startup instructions
 ├── my_profile.md             # Your profile (fill this!)
 └── dist/                     # Generated prompt output
@@ -127,6 +131,24 @@ The model thinks. Memory preserves continuity. Values preserve personality. Shar
 ### Tool names follow your companion
 
 Set `"tool_prefix": "xiaohui"` in `Bridge/config.json` (default: `agent`), and the MCP tools become `xiaohui_wake`, `xiaohui_note_today`, and so on. Setup can do it too: `python scripts/init_agent.py --agent-name 小灰 --user-name Nathaniel --tool-prefix xiaohui`. Regenerate the prompt and restart the MCP server; no code changes needed.
+
+### Rename your companion
+
+You can rename an already-initialized home; no reinstall needed.
+
+**Ask the AI to do it:**
+
+> **Rename my companion. Read the current name from `Brain/Immutable/Identity.md`, then run:**
+> **`python scripts/rename_agent.py --new-name "<new name>" --user-name "<what to call me>" --wake-words "<new name,English name>" --tool-prefix <ascii-prefix>`**
+> **It updates identity and instruction files, writes `Bridge/config.json`, and regenerates the prompt. Historical names in `Brain/Living` and archives are left untouched. Restart MCP afterwards.**
+
+**Or run it yourself:**
+
+```bash
+python scripts/rename_agent.py --new-name 阿灰 --user-name Nathaniel --wake-words "阿灰,Ahui" --tool-prefix ahui
+```
+
+Restart MCP / open a new session for the regenerated prompt to take effect.
 
 ### Chinese and English wake words
 

@@ -18,15 +18,33 @@ def memory_files() -> list[Path]:
     return files
 
 
+def write_identity_field(name: str, value: str) -> None:
+    identity = ROOT / "Brain" / "Immutable" / "Identity.md"
+    if not identity.is_file():
+        return
+    text = identity.read_text(encoding="utf-8")
+    pattern = re.compile(rf"(##\s*{re.escape(name)}\s*\n\n)([^\n]*)", re.IGNORECASE)
+    new_text, count = pattern.subn(rf"\g<1>`{value}`", text, count=1)
+    if count == 0:
+        new_text = text.rstrip() + f"\n\n## {name}\n\n`{value}`\n"
+    identity.write_text(new_text, encoding="utf-8")
+
+
 def replace_placeholders(agent_name: str, user_name: str) -> None:
     """身份和用户名字要覆盖整个记忆库，而不只是 Identity/WelcomeHome。"""
     for path in memory_files():
         text = path.read_text(encoding="utf-8")
-        if "{{AGENT_NAME}}" not in text and "{{USER_NAME}}" not in text:
-            continue
-        text = text.replace("{{AGENT_NAME}}", agent_name)
-        text = text.replace("{{USER_NAME}}", user_name)
-        path.write_text(text, encoding="utf-8")
+        new_text = (
+            text.replace("{{AGENT_NAME}}", agent_name)
+            .replace("{{USER_NAME}}", user_name)
+            # 模板自带的占位身份也一并替换，避免新用户拿到 TestAgent
+            .replace("TestAgent", agent_name)
+            .replace("TestUser", user_name)
+        )
+        if new_text != text:
+            path.write_text(new_text, encoding="utf-8")
+    write_identity_field("Agent Name", agent_name)
+    write_identity_field("User Name", user_name)
 
 
 def add_first_living_entry(agent_name: str, user_name: str) -> None:
