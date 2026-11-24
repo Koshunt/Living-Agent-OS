@@ -162,29 +162,24 @@ Any of these names wakes the same companion when the generated prompt is in use.
 
 ## Set Up on a New Machine
 
-**Cloning the template does not restore your memories.** The template ships with starter identity and empty memory; your memories live in **your own private copy** of this repo (the one containing `Brain/` and `MemoryPack/`), or in your backup.
+The easy path: **copy the whole agent folder from the old machine** (USB drive, cloud storage, or a private repo), then let the AI reconnect it. Memory lives in `Brain/`, `MemoryPack/`, and `Bridge/config.json`, so it travels with the folder.
 
-1. Clone **your private repository** on the new machine (not `Koshunt/Living-Agent-OS`):
+**The `.venv` does not travel.** A virtualenv records absolute paths and platform-specific binaries from the old machine; it usually will not work elsewhere. `Bridge/setup.ps1` (or `setup.sh`) rebuilds it for the new machine. You may copy it, but do not rely on it.
 
-   ```bash
-   git clone <your private repo URL> living-os
-   ```
+Give the new path to the AI on the new machine:
 
-2. Install Python 3.10+ and Git.
-3. Run `Bridge/setup.ps1` (or `setup.sh` on Linux) to create the venv and install dependencies.
-4. Point your AI client's MCP config at this checkout's `Bridge/server.py`; update the paths in `Bridge/config.json` for the new machine (`agent_home` / `python_env`).
-5. Regenerate the prompt (`dist/` is usually not committed):
+> **This is my Living Agent OS folder from my old computer, now at `<new path>`. Please:**
+> **1. Run `Bridge/setup.ps1` (or `setup.sh`) to rebuild the virtualenv and install dependencies.**
+> **2. Check `Bridge/config.json` and update `agent_home` / `python_env` to the new paths.**
+> **3. Wire `Bridge/server.py` into my AI client's MCP config: command `Bridge/.venv/.../python`, args `Bridge/server.py`, working directory this folder.**
+> **4. Regenerate the prompt: `python scripts/update_memory.py`.**
+> **5. In a new session, call the wake tool once (default `agent_wake`; with a custom prefix `<prefix>_wake`) and confirm it loads Today and long-term memory.**
 
-   ```bash
-   python scripts/update_memory.py
-   ```
+Notes:
 
-6. Open a new session and call the wake tool once (default `agent_wake`; with a custom prefix it is `<prefix>_wake`) so it loads Boot, Today, and long-term memory.
-7. For multiple machines, follow `AGENTS.md` for incremental sync and keep exactly one dream host.
-
-No private repo? Copy the old machine's whole directory (at least `Brain/`, `MemoryPack/`, `Bridge/config.json`) to the new machine and run steps 2-6.
-
----
+- MCP is a stdio server launched locally by the AI client, not a remote daemon, so **each machine needs its own MCP entry**. You are pointing at the same folder, not connecting to the old computer's MCP.
+- With a private git repo, clone it on the new machine and run steps 1, 2, 4, 5.
+- For multiple machines, follow `AGENTS.md` for incremental sync and keep exactly one dream host.
 
 ## Memory And Publication Safety
 

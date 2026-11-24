@@ -163,29 +163,24 @@ python scripts/rename_agent.py --new-name 阿灰 --user-name Nathaniel --wake-wo
 
 ## 在新电脑上恢复
 
-**恢复记忆不是 clone 模板。** 模板仓库只带初始身份和空记忆；你的记忆在**你自己的私人副本**（包含 `Brain/`、`MemoryPack/` 的那份仓库）里，或者在备份里。
+最省事的做法：**把旧电脑上的整个 agent 文件夹拷到新电脑**（U 盘、网盘、私有仓库都行），再让 AI 帮你重新接入。记忆在 `Brain/`、`MemoryPack/`、`Bridge/config.json` 里，跟着文件夹走。
 
-1. 在新电脑 clone **你的私人仓库**（不是 `Koshunt/Living-Agent-OS` 模板）：
+**但 `.venv` 不跟着走。** 虚拟环境里记的是旧电脑的绝对路径和平台二进制，换机器后通常不能直接用；`Bridge/setup.ps1`（Linux 用 `setup.sh`）会按新电脑重建。拷贝时可以带上，但不要指望它，环境以重新安装的为准。
 
-   ```bash
-   git clone <你的私人仓库地址> living-os
-   ```
+把新路径告诉新电脑上的 AI：
 
-2. 安装 Python 3.10+ 和 Git。
-3. 进入 `Bridge/` 运行 `setup.ps1`（Linux 用 `setup.sh`），创建虚拟环境并安装依赖。
-4. 在 AI 客户端配置 MCP，指向这份目录下的 `Bridge/server.py`；`Bridge/config.json` 里的路径按新电脑改（`agent_home` / `python_env`）。
-5. 重新生成提示词（`dist/` 一般不入库）：
+> **这是我旧电脑的 Living Agent OS 文件夹，现在放在 `<新路径>`。请帮我：**
+> **1. 运行 `Bridge/setup.ps1`（Linux 用 `setup.sh`）重建虚拟环境并安装依赖。**
+> **2. 检查 `Bridge/config.json`，把 `agent_home`、`python_env` 改成新电脑的路径。**
+> **3. 把 `Bridge/server.py` 接入我的 AI 客户端 MCP：命令用 `Bridge/.venv/.../python`，参数 `Bridge/server.py`，工作目录指向这个文件夹。**
+> **4. 重新生成提示词：`python scripts/update_memory.py`。**
+> **5. 开新会话先调用一次唤醒工具（默认 `agent_wake`，自定义前缀后是 `<前缀>_wake`），确认能读回 Today 和长期记忆。**
 
-   ```bash
-   python scripts/update_memory.py
-   ```
+补充：
 
-6. 开新会话，先调用一次唤醒工具（默认 `agent_wake`，自定义前缀后是 `<前缀>_wake`），让它读回 Boot、Today 和长期记忆。
-7. 多台电脑同时用：按 `AGENTS.md` 配置增量同步，并保证同一时间只有一台机器负责做梦。
-
-如果你没有私人仓库，就把旧电脑上的整个目录（至少 `Brain/`、`MemoryPack/`、`Bridge/config.json`）拷到新电脑，再执行第 2～6 步。
-
----
+- MCP 是 AI 客户端在本机启动的 stdio 服务，不是远程常驻进程，所以**每台电脑的 MCP 配置都要单独接一次**；接的是同一个文件夹，不是“连到旧电脑的 MCP”。
+- 用私有 git 仓库的话，直接 clone 到新电脑，再执行第 1、2、4、5 步。
+- 多台电脑同时用：按 `AGENTS.md` 配置增量同步，并保证同一时间只有一台机器负责做梦。
 
 ## 隐私保护
 
