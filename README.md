@@ -125,6 +125,10 @@ Living-Agent-OS/
 
 ---
 
+### 工具名跟着伴侣走
+
+在 `Bridge/config.json` 里设置 `"tool_prefix": "xiaohui"`（默认 `agent`），MCP 工具就会从 `agent_wake` 变成 `xiaohui_wake`、`agent_note_today` 变成 `xiaohui_note_today`。重新生成一次提示词并重启 MCP 即可，代码不用改。
+
 ## 在新电脑上恢复
 
 只要 clone 这个仓库，丢给你的 AI，它就会自己恢复所有记忆。

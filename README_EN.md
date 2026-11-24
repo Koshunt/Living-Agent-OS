@@ -124,6 +124,10 @@ The model thinks. Memory preserves continuity. Values preserve personality. Shar
 
 ---
 
+### Tool names follow your companion
+
+Set `"tool_prefix": "xiaohui"` in `Bridge/config.json` (default: `agent`), and the MCP tools become `xiaohui_wake`, `xiaohui_note_today`, and so on. Regenerate the prompt and restart the MCP server; no code changes needed.
+
 ## Set Up on a New Machine
 
 Clone the repo and throw it at your AI. The agent will set itself up and restore all memories.

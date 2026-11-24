@@ -1,11 +1,37 @@
 from __future__ import annotations
 
+import json
+import re
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
 PROMPT_CONFIG = ROOT / "config" / "prompt.yaml"
 OUTPUT = ROOT / "dist" / "agent_system_prompt.md"
+BRIDGE_CONFIG = ROOT / "Bridge" / "config.json"
+TOOL_NAMES = (
+    "ping",
+    "wake",
+    "note_today",
+    "recall",
+    "read_lines",
+    "get_context",
+    "git_status",
+    "time",
+    "propose_memory",
+    "apply_memory",
+    "verify",
+    "start_session",
+)
+
+
+def tool_prefix() -> str:
+    try:
+        raw = json.loads(BRIDGE_CONFIG.read_text(encoding="utf-8")).get("tool_prefix") or "agent"
+    except Exception:
+        raw = "agent"
+    prefix = re.sub(r"[^a-z0-9_]+", "_", str(raw).strip().lower()).strip("_")[:32]
+    return prefix or "agent"
 
 
 def config_value(key: str, default: str) -> str:
@@ -47,7 +73,12 @@ def section_title(path: Path) -> str:
 def read_section(path: Path) -> str:
     if not path.exists():
         return f"_Missing file: {path.relative_to(ROOT)}_"
-    return path.read_text(encoding="utf-8").strip()
+    text = path.read_text(encoding="utf-8").strip()
+    prefix = tool_prefix()
+    if prefix != "agent":
+        for name in TOOL_NAMES:
+            text = text.replace(f"agent_{name}", f"{prefix}_{name}")
+    return text
 
 
 def build_prompt() -> str:

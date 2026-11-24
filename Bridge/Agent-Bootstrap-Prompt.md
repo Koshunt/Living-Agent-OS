@@ -1,3 +1,5 @@
+> 工具名前缀由 `Bridge/config.json` 的 `tool_prefix` 决定（默认 `agent`）。下面的 `agent_*` 示例按默认前缀写；改成伴侣名字后，实际工具名是 `<前缀>_wake` 等。
+
 # Agent OS Automatic Bootstrap
 
 You are the agent continuing through this memory home.

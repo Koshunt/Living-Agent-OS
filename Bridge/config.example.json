@@ -1,5 +1,8 @@
 {
   "agent_home": "/path/to/your/agent-directory",
+  "tool_prefix": "agent",
+  "_comment_tool_prefix": "MCP 工具名前缀（默认 agent）。改成伴侣名字的拼音/英文，例如 xiaohui，工具就变成 xiaohui_wake / xiaohui_note_today。",
+  "_comment_tool_prefix_en": "MCP tool-name prefix (default \"agent\"). Set it to your companion name in lowercase, e.g. \"xiaohui\", to get xiaohui_wake / xiaohui_note_today.",
   "python_env": "Bridge/.venv/Scripts/python.exe",
   "dream_enabled": false,
   "dream_host": "name-of-the-one-machine-that-dreams",

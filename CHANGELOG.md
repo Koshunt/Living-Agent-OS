@@ -12,6 +12,7 @@
 - [fix] `daily_rollover.py`: the undated/empty reset branch now snapshots `Today.md` (`undated-{time}.md`) before wiping - a stale `Date:` field plus that branch could silently drop a whole day of notes.
 - [fix] `agent_note_today` and the rollover take a file lock (`Brain/.today.lock`); multiple agent instances on one machine no longer overwrite each other's notes.
 - [fix] The rollover pulls before archiving, so it never archives onto a stale view of `Living/{year}.md`.
+- [feature] Custom MCP tool prefix: `tool_prefix` in `Bridge/config.json` (default `agent`) renames `agent_*` tools to `<prefix>_*` (e.g. `xiaohui_wake`); the generated system prompt is substituted to match.
 - [feature] Union merge for append-only memory logs via `.gitattributes` (`Brain/Today.md`, `Brain/Living/20*.md`): cross-machine sync keeps both sides' additions instead of whole-file replacement. Docs: `docs/DreamAndSync.md` (union subsection + ops lessons 6-7).
 
 ## v0.2 — 2026-11-17 (backported from a production deployment)

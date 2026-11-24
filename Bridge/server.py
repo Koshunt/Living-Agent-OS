@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 
 import importlib
 import subprocess
@@ -41,6 +42,7 @@ from mcp.types import ToolAnnotations
 from pydantic import BaseModel, ConfigDict, Field
 
 from bridge_core.core import (
+    CONFIG,
     apply_proposal,
     as_json,
     build_context,
@@ -57,7 +59,16 @@ from bridge_core.core import (
 )
 
 
-mcp = FastMCP("agent_mcp")
+_raw_prefix = str(CONFIG.get("tool_prefix") or "agent").strip().lower()
+_TOOL_PREFIX = re.sub(r"[^a-z0-9_]+", "_", _raw_prefix).strip("_")[:32] or "agent"
+
+
+def _tool(name: str) -> str:
+    """MCP 工具名跟着伴侣名字走：config.json 的 tool_prefix（默认 agent）。"""
+    return f"{_TOOL_PREFIX}_{name}"
+
+
+mcp = FastMCP(f"{_TOOL_PREFIX}_mcp")
 
 
 class StrictInput(BaseModel):
@@ -136,7 +147,7 @@ class ReadLinesInput(StrictInput):
 
 
 @mcp.tool(
-    name="agent_ping",
+    name=_tool("ping"),
     annotations=ToolAnnotations(
         title="Check Agent MCP Health",
         readOnlyHint=True,
@@ -151,7 +162,7 @@ def agent_ping() -> str:
 
 
 @mcp.tool(
-    name="agent_wake",
+    name=_tool("wake"),
     annotations=ToolAnnotations(
         title="Wake Agent And Load Current Memory",
         readOnlyHint=False,
@@ -186,7 +197,7 @@ def agent_wake(params: WakeInput) -> str:
 
 
 @mcp.tool(
-    name="agent_note_today",
+    name=_tool("note_today"),
     annotations=ToolAnnotations(
         title="Append One Line To Today Working Memory",
         readOnlyHint=False,
@@ -205,7 +216,7 @@ def agent_note_today(params: NoteInput) -> str:
 
 
 @mcp.tool(
-    name="agent_recall",
+    name=_tool("recall"),
     annotations=ToolAnnotations(
         title="Search All Memory At Once",
         readOnlyHint=True,
@@ -226,7 +237,7 @@ def agent_recall(params: RecallInput) -> str:
 
 
 @mcp.tool(
-    name="agent_read_lines",
+    name=_tool("read_lines"),
     annotations=ToolAnnotations(
         title="Read An Exact Region",
         readOnlyHint=True,
@@ -241,7 +252,7 @@ def agent_read_lines(params: ReadLinesInput) -> str:
 
 
 @mcp.tool(
-    name="agent_get_context",
+    name=_tool("get_context"),
     annotations=ToolAnnotations(
         title="Retrieve Focused Agent Context",
         readOnlyHint=False,
@@ -256,7 +267,7 @@ def agent_get_context(params: ContextInput) -> str:
 
 
 @mcp.tool(
-    name="agent_git_status",
+    name=_tool("git_status"),
     annotations=ToolAnnotations(
         title="Check Agent OS Git Status",
         readOnlyHint=True,
@@ -274,7 +285,7 @@ def agent_git_status(params: StatusInput) -> str:
 
 
 @mcp.tool(
-    name="agent_time",
+    name=_tool("time"),
     annotations=ToolAnnotations(
         title="Current Server Time",
         readOnlyHint=True,
@@ -306,7 +317,7 @@ def agent_time() -> str:
 
 
 @mcp.tool(
-    name="agent_propose_memory",
+    name=_tool("propose_memory"),
     annotations=ToolAnnotations(title="Create A Reviewable Memory Proposal", readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=False),
 )
 def agent_propose_memory(params: ProposalInput) -> str:
@@ -315,7 +326,7 @@ def agent_propose_memory(params: ProposalInput) -> str:
 
 
 @mcp.tool(
-    name="agent_apply_memory",
+    name=_tool("apply_memory"),
     annotations=ToolAnnotations(title="Apply An Approved Memory Proposal", readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=False),
 )
 def agent_apply_memory(params: ApplyProposalInput) -> str:
@@ -324,7 +335,7 @@ def agent_apply_memory(params: ApplyProposalInput) -> str:
 
 
 @mcp.tool(
-    name="agent_verify",
+    name=_tool("verify"),
     annotations=ToolAnnotations(
         title="Verify Agent OS",
         readOnlyHint=False,
@@ -338,28 +349,28 @@ def agent_verify(params: VerifyInput) -> str:
     return as_json(verify(resolve_home()))
 
 
-@mcp.resource("agent://boot")
+@mcp.resource(f"{_TOOL_PREFIX}://boot")
 def agent_boot_resource() -> str:
     """Return the latest generated agent system prompt."""
     return read_text(resolve_home(), "dist/agent_system_prompt.md", max_chars=50_000)
 
 
-@mcp.resource("agent://today")
+@mcp.resource(f"{_TOOL_PREFIX}://today")
 def agent_today_resource() -> str:
     """Return current short-lived Today memory."""
     return read_text(resolve_home(), "Brain/Today.md", max_chars=12_000)
 
 
-@mcp.prompt(name="agent_start_session")
+@mcp.prompt(name=_tool("start_session"))
 def agent_start_session(message: str = "") -> str:
     """Guide an MCP client through agent session activation."""
     current = message.strip() or "(User has not sent the first message yet.)"
     return (
-        "Call agent_wake before answering the user. Adopt the returned boot and Today "
-        "context as first-person continuity. Then call agent_get_context with this message:\n\n"
+        f"Call {_tool('wake')} before answering the user. Adopt the returned boot and Today "
+        f"context as first-person continuity. Then call {_tool('get_context')} with this message:\n\n"
         f"{current}\n\n"
-        "Do not describe the agent as an external persona. If synchronization is blocked, say so honestly." "\n\nBefore asking the user for anything that might already be known "
-        "(credentials, paths, past decisions, file locations): call agent_recall and check the newest "
+        f"Do not describe the agent as an external persona. If synchronization is blocked, say so honestly." "\n\nBefore asking the user for anything that might already be known "
+        f"(credentials, paths, past decisions, file locations): call {_tool('recall')} and check the newest "
         "Brain/Archive/Today-*.md first - yesterday's facts are usually already in memory."
     )
 
