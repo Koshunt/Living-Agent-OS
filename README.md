@@ -127,7 +127,7 @@ Living-Agent-OS/
 
 ### 工具名跟着伴侣走
 
-在 `Bridge/config.json` 里设置 `"tool_prefix": "xiaohui"`（默认 `agent`），MCP 工具就会从 `agent_wake` 变成 `xiaohui_wake`、`agent_note_today` 变成 `xiaohui_note_today`。重新生成一次提示词并重启 MCP 即可，代码不用改。
+在 `Bridge/config.json` 里设置 `"tool_prefix": "xiaohui"`（默认 `agent`），MCP 工具就会从 `agent_wake` 变成 `xiaohui_wake`、`agent_note_today` 变成 `xiaohui_note_today`。初始化时也可以直接传：`python scripts/init_agent.py --agent-name 小灰 --user-name Nathaniel --tool-prefix xiaohui`。重新生成一次提示词并重启 MCP 即可，代码不用改。
 
 ### 中英文唤醒词
 
@@ -137,7 +137,7 @@ Living-Agent-OS/
 "wake_words": ["小灰", "Xiaohui", "xiao hui"]
 ```
 
-生成系统提示词后，用户叫其中任何一个名字都视为唤醒，不必记住英文名或中文名。初始化时也可以直接传：`python scripts/init_agent.py --agent-name 小灰 --user-name Nathaniel --wake-words "小灰,Xiaohui"`。
+生成系统提示词后，用户叫其中任何一个名字都视为唤醒，不必记住英文名或中文名。初始化时也可以直接传：`python scripts/init_agent.py --agent-name 小灰 --user-name Nathaniel --wake-words "小灰,Xiaohui" --tool-prefix xiaohui`。
 
 ## 在新电脑上恢复
 
