@@ -28,6 +28,7 @@ Call `<prefix>_read_room` with `boot`, `operations`, or `story`. The tool return
 
 - `Brain/Today.md` is short-lived working memory. `<prefix>_note_today` appends one timestamped line. `<prefix>_update_memory` writes one titled section. Both write only Today.md.
 - Durable memory is proposal-only: `<prefix>_propose_memory` creates a reviewable proposal. Nothing changes until the user explicitly confirms and `<prefix>_apply_memory` is called.
+- The proposal tool classifies content with a configured LLM before writing the proposal. Implementation artifacts (hashes, metrics, script names, parameters, one-off results) are rejected and belong in Today or Git; durable preferences, relationship facts, voice rules, research directions, and project decisions keep the requested target. The decision and its reason are recorded in the proposal's `routing` field. If the LLM is unavailable, a keyword backstop applies the same rule.
 - Nightly dream may append dated distillations to `Brain/Living/{year}.md` and `Brain/Reflection.md` under its own contract. It never rewrites history.
 - If a room is full, propose a distillation. No script may silently summarize durable rooms.
 
