@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
+from association_engine import find_association, render_association
 from retriever import ROOT, retrieve_paths
 
 
@@ -28,6 +29,9 @@ def build_context(message: str) -> str:
                 "",
             ]
         )
+    association = render_association(find_association(message))
+    if association:
+        parts.extend(["---", "", association])
     return "\n".join(parts).strip() + "\n"
 
 

@@ -1,0 +1,28 @@
+{
+  "associations": [
+    {
+      "id": "memory-rules",
+      "triggers": ["memory rules", "long-term memory", "remember", "memory", "记忆规则", "长期记忆", "记住"],
+      "memory": "Brain/MemoryChangePolicy.md",
+      "cue": "The user may be asking about how memory is written; this file states the proposal and confirmation rules."
+    },
+    {
+      "id": "dream-contract",
+      "triggers": ["dream", "nightly distillation", "做梦", "蒸馏", "夜间"],
+      "memory": "docs/DreamAndSync.md",
+      "cue": "The question may relate to nightly distillation or multi-machine memory sync."
+    },
+    {
+      "id": "room-contract",
+      "triggers": ["read_room", "rooms", "memory room", "记忆房间", "房间"],
+      "memory": "docs/MemoryRooms.md",
+      "cue": "The user may want a room opened; this file defines boot, operations, and story."
+    },
+    {
+      "id": "voice-style",
+      "triggers": ["voice", "tone", "style", "语气", "风格", "说话"],
+      "memory": "MemoryPack/Persona/Voice.md",
+      "cue": "This may concern the companion's voice or reply style."
+    }
+  ]
+}

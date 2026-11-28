@@ -21,6 +21,9 @@
 - **记忆房间**：`config/rooms.json` 定义 boot / operations / story 三间房的体积契约；`<prefix>_read_room` 按需打开，`<prefix>://operations` / `<prefix>://story` 作为 MCP 资源可直接读取。
 - **短期记忆直写**：`<prefix>_update_memory` 写 `Brain/Today.md`；长期记忆走 `<prefix>_propose_memory` → 用户确认 → `<prefix>_apply_memory`。
 - **完整 MCP 面**：`ping / wake / note_today / recall / read_lines / get_context / git_status / time / verify / start_session / propose_memory / apply_memory / read_room / update_memory`，资源 `boot / today / operations / story`；`wake` 支持 `auto_sync` 与 `maintain`。
+- **话语关联记忆**：`config/associations.json` 配置触发词 → 记忆文件；`get_context` 会把命中的关联记忆附进对话上下文，用户说过的话能被检索回来。
+- **记忆分层与月度信**：`scripts/memory_strength.py` 按遗忘曲线归档冷记忆，`scripts/monthly_letter.py` 从当月 Living 记录起草月度信（需用户确认才保存）。
+- **做梦模型链**：`AGENT_LLM_API_KEY / AGENT_LLM_BASE_URL / AGENT_LLM_MODELS` 可配置；梦后自动重建 `Brain/RecallIndex.md`，grep 一行即可定位长期记忆。
 - **记忆检索**：`agent_recall` 全文搜索 Brain/（英文词边界 + 中文 bigram 评分），`agent_read_lines` 打开命中区域——不用翻每个文件就能想起任何事。
 - **增量同步**：`Bridge/sync.sh` 挂 cron 即用（提交 `sync(host): auto` → pull --rebase → push），和做梦机守卫配套组成多机拓扑。
 - **多机拓扑**：远端 main 为单一真相源；全集群只有一台"做梦机"（`dream_host` 配置），其余机器只聊天+增量 push。

@@ -21,6 +21,9 @@ This template is the result of that work. It's yours now.
 - **Memory rooms**: `config/rooms.json` defines size contracts for boot / operations / story. Open one with `<prefix>_read_room`, or read `<prefix>://operations` and `<prefix>://story` as MCP resources.
 - **Short-term write**: `<prefix>_update_memory` writes `Brain/Today.md`; durable changes go through `<prefix>_propose_memory` → confirmation → `<prefix>_apply_memory`.
 - **Full MCP surface**: `ping / wake / note_today / recall / read_lines / get_context / git_status / time / verify / start_session / propose_memory / apply_memory / read_room / update_memory`, plus resources `boot / today / operations / story`; `wake` accepts `auto_sync` and `maintain`.
+- **Utterance associations**: `config/associations.json` maps trigger phrases to memory files; `get_context` attaches matched associations so things the user said can be retrieved in later conversations.
+- **Memory tiering and monthly letters**: `scripts/memory_strength.py` archives cold memories by a forgetting curve; `scripts/monthly_letter.py` drafts a monthly letter from the month's Living entries and saves only after user confirmation.
+- **Dream model chain**: configure `AGENT_LLM_API_KEY / AGENT_LLM_BASE_URL / AGENT_LLM_MODELS`; each dream rebuilds `Brain/RecallIndex.md` so one grep line locates a durable memory.
 - **Memory retrieval**: `agent_recall` full-text search over `Brain/` (Latin word-boundary + CJK bigram scoring) and `agent_read_lines` to open the exact hit region — remember anything without reading every file.
 - **Incremental sync**: `Bridge/sync.sh` cron companion (host-tagged auto commit → pull --rebase → push), pairing with the dreamer guard to complete the multi-machine topology.
 - **Multi-machine topology**: remote `main` is the single source of truth; exactly one machine dreams (`dream_host`), the rest chat and push increments.

@@ -3,6 +3,7 @@
 ## Unreleased
 
 - [feature] Backfill the production room model with generic, de-identified defaults: `config/rooms.json` (boot/operations/story contracts), `<prefix>_read_room` tool and resources, `<prefix>_update_memory` (Today.md only).
+- [feature] De-identified extension modules: `association_engine.py` + generic `config/associations.json` wired into `get_context`, `memory_strength.py`, `monthly_letter.py`; dream gains generic `AGENT_LLM_*` chain aliases and nightly RecallIndex rebuild.
 - [docs] AGENTS.md uses `<tool_prefix>_verify` so custom-prefix deployments do not refer to a nonexistent tool; merged duplicate Unreleased sections.
 - Bridge: server.py 支持 AGENT_MCP_TRANSPORT/HOST/PORT 环境变量切换远程传输(streamable-http), 默认 stdio 不变
 - scripts: 新增 precompact_note.py — CC PreCompact 钩子, 上下文压缩前把 transcript 指针写进 Today.md(路径按脚本位置自推导, 任意克隆通用)

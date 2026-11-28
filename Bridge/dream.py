@@ -40,7 +40,8 @@ from daily_rollover import fresh_today  # noqa: E402  — single Today skeleton 
 LOG = os.path.join(BRIDGE, "dream.log")
 DEFAULT_API = "https://open.bigmodel.cn/api/coding/paas/v4/chat/completions"
 MODELS = [m.strip() for m in os.environ.get(
-    "LIVINGOS_LLM_MODELS", "glm-5.3-flash,glm-5.3"
+    "AGENT_LLM_MODELS",
+    os.environ.get("LIVINGOS_LLM_MODELS", "glm-5.3-flash,glm-5.3")
 ).split(",") if m.strip()]
 
 PLACEHOLDER = re.compile(
@@ -80,12 +81,14 @@ def call_llm(prompt: str, per_model_retries: int = 3) -> dict:
     reasoning and return empty content (the root cause of a 9-failure night
     in the production deployment).
     """
-    key = os.environ.get("LIVINGOS_LLM_API_KEY", "").strip()
+    key = (os.environ.get("AGENT_LLM_API_KEY")
+           or os.environ.get("LIVINGOS_LLM_API_KEY", "")).strip()
     if not key:
         raise SystemExit(
-            "LIVINGOS_LLM_API_KEY is not set. Export it before dreaming."
+            "AGENT_LLM_API_KEY (or LIVINGOS_LLM_API_KEY) is not set. Export it before dreaming."
         )
-    api = os.environ.get("LIVINGOS_LLM_BASE_URL", DEFAULT_API).strip()
+    api = (os.environ.get("AGENT_LLM_BASE_URL")
+           or os.environ.get("LIVINGOS_LLM_BASE_URL", DEFAULT_API)).strip()
     body_base = {
         "messages": [{"role": "user", "content": prompt}],
         "temperature": 0.3,
@@ -172,6 +175,45 @@ def upsert_dated(path: str, date: str, entries: list[str],
     with open(path, "w", encoding="utf-8") as fh:
         fh.write("\n".join(lines).rstrip() + "\n")
     return action
+
+
+def rebuild_recall_index() -> int:
+    """Rebuild Brain/RecallIndex.md from dated sections across durable rooms."""
+    brain = os.path.join(str(resolve_home()), "Brain")
+    rows = []
+    for root, _, files in os.walk(brain):
+        for name in files:
+            if not name.endswith(".md") or name == "RecallIndex.md":
+                continue
+            path = os.path.join(root, name)
+            relative = os.path.relpath(path, brain).replace(os.sep, "/")
+            if relative.startswith(".backups/") or relative.startswith("Archive/"):
+                continue
+            date = headline = None
+            for line in read(path).splitlines():
+                m = re.match(r"^###\s+(\d{4}-\d{2}-\d{2})", line.strip())
+                if m:
+                    if date and headline:
+                        rows.append((date, relative, headline))
+                    date, headline = m.group(1), None
+                    continue
+                if date and not headline:
+                    b = re.match(r"^-\s+(.+)$", line.strip())
+                    if b:
+                        headline = b.group(1)[:60]
+            if date and headline:
+                rows.append((date, relative, headline))
+    rows.sort(reverse=True)
+    out = [
+        "# RecallIndex — one line per durable memory",
+        "",
+        "Format: date | source | first line. Grep this file to locate the room, then read the source.",
+        "",
+    ]
+    out += [f"- {d} | {src} | {h}" for d, src, h in rows]
+    with open(os.path.join(brain, "RecallIndex.md"), "w", encoding="utf-8") as fh:
+        fh.write("\n".join(out) + "\n")
+    return len(rows)
 
 
 def main() -> int:
@@ -261,6 +303,8 @@ def main() -> int:
     upsert_dated(living_path, dream_date, living, file_header=year)
     if reflection:
         upsert_dated(reflection_path, dream_date, reflection)
+    indexed = rebuild_recall_index()
+    log(f"recall index rebuilt: {indexed} entries")
 
     # Archive the day, reset Today.md for tomorrow.
     with open(os.path.join(brain, "Living", f"Today-{dream_date}.md"), "w",
