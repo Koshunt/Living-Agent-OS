@@ -13,7 +13,7 @@
 2. Do not pull or merge blindly with a dirty worktree.
 3. Merge daily memory files manually when both sides changed them.
 4. Do not replace `Brain/Today.md` unless the replacement is clearly newer.
-5. Run `agent_verify` after maintenance.
+5. Run `<tool_prefix>_verify` after maintenance (`agent_verify` only when the prefix is left at its default).
 6. Commit only after the user approves the final state; push only after separate user approval. Exception: scheduled `Bridge/sync.sh` runs may commit and push mechanical `sync(host): auto` increments (Today-style content only, never code or durable-memory changes).
 
 ## Durable Memory

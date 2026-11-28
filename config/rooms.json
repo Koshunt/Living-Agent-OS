@@ -1,0 +1,57 @@
+{
+  "_why": "Memory is split into rooms so a wake-up bundle never cuts a room in half.",
+  "_rule": "This file is the single source of truth for room size contracts. Generators must enforce max_chars; readers use read_when to decide what to open. A full room requires a reviewed proposal before distillation.",
+  "_when": "boot is loaded at every wake; operations is opened before memory work; story is opened when the user asks about the companion's history or continuity.",
+  "rooms": {
+    "boot": {
+      "title": "Agent Boot Prompt",
+      "output": "dist/agent_system_prompt.md",
+      "max_chars": 65000,
+      "read_when": "every wake",
+      "files": [
+        "Brain/BootProtocol.md",
+        "Brain/INDEX.md",
+        "Brain/Home.md",
+        "Brain/Immutable/Identity.md",
+        "Brain/Immutable/Relationship.md",
+        "Brain/Immutable/CoreValues.md",
+        "Brain/ConversationPolicy.md",
+        "Brain/MemoryChangePolicy.md",
+        "Brain/Voice.md",
+        "Brain/Today.md",
+        "MemoryPack/Prompt/CorePrompt.md",
+        "MemoryPack/Prompt/CompanionMode.md",
+        "MemoryPack/Persona/Identity.md",
+        "MemoryPack/Persona/Relationship.md",
+        "MemoryPack/Persona/Voice.md"
+      ]
+    },
+    "operations": {
+      "title": "Agent Operations",
+      "output": "dist/agent_operations_prompt.md",
+      "max_chars": 24000,
+      "read_when": "before writing durable memory, distilling, or drafting formal notes",
+      "files": [
+        "Brain/MaintenanceContract.md",
+        "Brain/AssociationPolicy.md",
+        "Brain/MemoryChangePolicy.md",
+        "Brain/Letters/WelcomeHome.md",
+        "MemoryPack/Prompt/MemoryOpsMode.md"
+      ]
+    },
+    "story": {
+      "title": "Agent Story",
+      "output": "dist/agent_story_prompt.md",
+      "max_chars": 40000,
+      "read_when": "when the user asks about continuity, history, or why this agent exists",
+      "files": [
+        "Brain/Reflection.md",
+        "Brain/Promises.md",
+        "Brain/Living/2026.md",
+        "MemoryPack/Memory/ContinuityMemory.md",
+        "MemoryPack/Memory/DecisionMemory.md",
+        "MemoryPack/Memory/CorrectionLog.md"
+      ]
+    }
+  }
+}

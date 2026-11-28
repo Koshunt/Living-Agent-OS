@@ -17,7 +17,10 @@ This template is the result of that work. It's yours now.
 ## New in v0.2 (2026-11)
 
 - **Nightly dream**: `Bridge/dream.py` distills `Today.md` into durable memory (`Brain/Living/{year}.md` and `Reflection.md`), archives the day, resets, and pushes — idempotent, failure-safe, with a per-model retry chain. **Off by default**: enable with `"dream_enabled": true` in `config.json`; when on, one light API call per night, empty nights cost nothing, flip off anytime. See `docs/DreamAndSync.md`.
-- **Handover note**: new MCP tool `agent_note_today` appends one timestamped line to `Today.md` (Today is ephemeral working memory, so it writes directly; durable memory still goes through proposal + confirmation).
+- **Handover note**: new MCP tool `<prefix>_note_today` appends one timestamped line to `Today.md` (ephemeral working memory, direct write; durable memory still goes through proposal + confirmation).
+- **Memory rooms**: `config/rooms.json` defines size contracts for boot / operations / story. Open one with `<prefix>_read_room`, or read `<prefix>://operations` and `<prefix>://story` as MCP resources.
+- **Short-term write**: `<prefix>_update_memory` writes only `Brain/Today.md`; it structurally cannot touch durable rooms. Durable changes still require `<prefix>_propose_memory` + explicit confirmation + `<prefix>_apply_memory`.
+- **Full MCP surface**: `ping / wake / note_today / recall / read_lines / get_context / git_status / time / verify / start_session / propose_memory / apply_memory / read_room / update_memory`, plus resources `boot / today / operations / story`; `wake` accepts `auto_sync` and `maintain`.
 - **Memory retrieval**: `agent_recall` full-text search over `Brain/` (Latin word-boundary + CJK bigram scoring) and `agent_read_lines` to open the exact hit region — remember anything without reading every file.
 - **Incremental sync**: `Bridge/sync.sh` cron companion (host-tagged auto commit → pull --rebase → push), pairing with the dreamer guard to complete the multi-machine topology.
 - **Multi-machine topology**: remote `main` is the single source of truth; exactly one machine dreams (`dream_host`), the rest chat and push increments.
@@ -130,7 +133,7 @@ The model thinks. Memory preserves continuity. Values preserve personality. Shar
 
 ### Tool names follow your companion
 
-Set `"tool_prefix": "xiaohui"` in `Bridge/config.json` (default: `agent`), and the MCP tools become `xiaohui_wake`, `xiaohui_note_today`, and so on. Setup can do it too: `python scripts/init_agent.py --agent-name 小灰 --user-name Nathaniel --tool-prefix xiaohui`. Regenerate the prompt and restart the MCP server; no code changes needed.
+Set `"tool_prefix": "companion"` in `Bridge/config.json` (default: `agent`), and the MCP tools become `companion_wake`, `companion_note_today`, and so on. Setup can do it too: `python scripts/init_agent.py --agent-name "<companion name>" --user-name "<how to address you>" --tool-prefix companion`. Regenerate the prompt and restart the MCP server; no code changes needed.
 
 ### Rename your companion
 
@@ -145,7 +148,7 @@ You can rename an already-initialized home; no reinstall needed.
 **Or run it yourself:**
 
 ```bash
-python scripts/rename_agent.py --new-name 阿灰 --user-name Nathaniel --wake-words "阿灰,Ahui" --tool-prefix ahui
+python scripts/rename_agent.py --new-name "<new name>" --user-name "<how to address you>" --wake-words "<new name,NewName>" --tool-prefix companion
 ```
 
 Restart MCP / open a new session for the regenerated prompt to take effect.
@@ -155,10 +158,10 @@ Restart MCP / open a new session for the regenerated prompt to take effect.
 `wake_words` in `Bridge/config.json` is an array; mix languages freely:
 
 ```json
-"wake_words": ["小灰", "Xiaohui", "xiao hui"]
+"wake_words": ["伴侣名", "Companion", "companion"]
 ```
 
-Any of these names wakes the same companion when the generated prompt is in use. During setup you can also pass `--wake-words "小灰,Xiaohui" --tool-prefix xiaohui` to `scripts/init_agent.py`.
+Any of these names wakes the same companion when the generated prompt is in use. During setup you can also pass `--wake-words "<name,Name>" --tool-prefix companion` to `scripts/init_agent.py`.
 
 ## Set Up on a New Machine
 

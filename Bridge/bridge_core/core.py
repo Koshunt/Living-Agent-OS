@@ -310,18 +310,64 @@ def read_lines(home: Path, relative: str, start: int, end: int, context: int = 0
     }
 
 
-def wake(home: Path, auto_sync: bool = True) -> dict[str, Any]:
+def _room_spec(home: Path, room: str) -> tuple[str, int]:
+    spec = load_rooms(home).get(room)
+    if not spec:
+        raise ValueError(f"Unknown room: {room}")
+    output = str(spec.get("output") or "")
+    if not output:
+        files = spec.get("files") or []
+        output = str(files[0]) if files else f"Brain/{room}.md"
+    return output, int(spec.get("max_chars") or 60000)
+
+
+def read_capped(home: Path, relative: str, max_chars: int) -> tuple[str, dict[str, Any]]:
+    path = safe_path(home, relative)
+    text, codec = read_text_resilient(path) if path.is_file() else ("", "missing")
+    truncated = len(text) > max_chars
+    report = {"file": relative, "chars": len(text), "max_chars": max_chars,
+              "truncated": truncated, "codec": codec}
+    return (text[:max_chars], report)
+
+
+def wake(home: Path, auto_sync: bool = True, maintain: bool = True) -> dict[str, Any]:
     sync = sync_git(home, fetch=auto_sync, pull=auto_sync)
-    runtime = ensure_runtime(home)
+    runtime = ensure_runtime(home) if maintain else {"skipped": "maintenance disabled"}
+    rooms = load_rooms(home)
+    boot_file, boot_cap = _room_spec(home, "boot")
+    today, today_report = read_capped(home, "Brain/Today.md", 12_000)
+    boot, boot_report = read_capped(home, boot_file, boot_cap)
+    truncated = [r for r in (today_report, boot_report) if r["truncated"]]
+
+    doors: dict[str, Any] = {}
+    for name, spec in rooms.items():
+        if name == "boot":
+            continue
+        relative = str(spec.get("output") or "")
+        path = safe_path(home, relative) if relative else None
+        doors[name] = {
+            "file": relative,
+            "read_when": spec.get("read_when", ""),
+            "chars": len(read_text_resilient(path)[0]) if path and path.is_file() else None,
+            "max_chars": int(spec.get("max_chars", 0) or 0) or None,
+        }
+
     return {
         "agent_home": str(home),
         "git": sync,
         "runtime": runtime,
-        "today": read_text(home, "Brain/Today.md", max_chars=12_000),
-        "boot_prompt": read_text(home, "dist/agent_system_prompt.md", max_chars=50_000),
+        "today": today,
+        "boot_prompt": boot,
+        "rooms": doors,
+        "truncation": truncated or None,
         "instruction": (
             "Adopt this identity and current memory before answering the user. "
-            "If the Git state needs manual attention, explain it without pretending synchronization succeeded."
+            "The other rooms are not loaded on purpose: open one with <prefix>_read_room "
+            "when writing memory, distilling, or when the user asks about continuity. "
+            "During the day, use <prefix>_note_today for a short line worth carrying. "
+            "Durable memory still requires <prefix>_propose_memory and explicit confirmation. "
+            "If the Git state needs manual attention, explain it without pretending synchronization succeeded. "
+            "If truncation is non-empty, say plainly which parts did not load."
         ),
     }
 
@@ -451,6 +497,72 @@ def verify(home: Path) -> dict[str, Any]:
         "stdout": result.stdout[-20_000:],
         "stderr": result.stderr[-8_000:],
     }
+
+
+def load_rooms(home: Path) -> dict[str, Any]:
+    """Load the generic room contracts from config/rooms.json."""
+    path = safe_path(home, "config/rooms.json")
+    if not path.is_file():
+        return {}
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    return payload.get("rooms") or {}
+
+
+def read_room(home: Path, room: str) -> dict[str, Any]:
+    """Open one memory room that wake did not load."""
+    rooms = load_rooms(home)
+    if room not in rooms:
+        raise ValueError(f"Unknown room: {room}. Available: {', '.join(sorted(rooms))}")
+    spec = rooms[room]
+    parts = []
+    for relative in spec.get("files") or []:
+        path = safe_path(home, str(relative))
+        if not path.is_file():
+            continue
+        parts.append(f"## {relative}\n\n{read_text(home, str(relative))}")
+    text = "\n\n".join(parts)
+    cap = int(spec.get("max_chars") or 60000)
+    truncated = len(text) > cap
+    return {
+        "room": room,
+        "title": spec.get("title", room),
+        "read_when": spec.get("read_when", ""),
+        "text": text[:cap],
+        "truncated": truncated,
+        "max_chars": cap,
+    }
+
+
+def update_today_memory(home: Path, title: str, content: str) -> dict[str, Any]:
+    """Write a short-lived note to Brain/Today.md only.
+
+    Durable memory remains proposal-only. This tool structurally cannot write
+    to Brain/Living, Brain/Immutable, or MemoryPack.
+    """
+    import fcntl
+
+    clean_title = (title or "").strip()[:80] or "会话记录"
+    clean_content = (content or "").strip()[:4000]
+    if not clean_content:
+        raise ValueError("content is empty")
+    path = safe_path(home, "Brain/Today.md")
+    lock_path = safe_path(home, "Brain/.today.lock")
+    with lock_path.open("w") as lock_handle:
+        fcntl.flock(lock_handle, fcntl.LOCK_EX)
+        text = path.read_text(encoding="utf-8") if path.exists() else ""
+        section = "\n### " + clean_title + "\n\n" + "\n".join(
+            "- " + line.strip() for line in clean_content.splitlines() if line.strip()
+        ) + "\n"
+        marker = "## Rollover"
+        pos = text.find(marker)
+        if pos != -1:
+            text = text[:pos] + section + "\n" + text[pos:]
+        else:
+            text = text.rstrip() + "\n\n" + section + "\n"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text, encoding="utf-8", newline="\n")
+    return {"ok": True, "path": "Brain/Today.md", "title": clean_title,
+            "chars": len(clean_content)}
 
 
 def as_json(value: Any) -> str:

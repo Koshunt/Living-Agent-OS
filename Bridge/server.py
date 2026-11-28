@@ -50,8 +50,10 @@ from bridge_core.core import (
     git_state,
     note_today,
     read_lines,
+    read_room,
     read_text,
     recall,
+    update_today_memory,
     resolve_home,
     sync_git,
     verify,
@@ -79,6 +81,10 @@ class WakeInput(StrictInput):
     auto_sync: bool = Field(
         default=True,
         description="Fetch origin/main and pull only when the main worktree is clean and fast-forwardable.",
+    )
+    maintain: bool = Field(
+        default=True,
+        description="Run daily rollover and prompt regeneration during wake.",
     )
 
 
@@ -122,6 +128,20 @@ class NoteInput(StrictInput):
         max_length=500,
         description="One Today.md line: what happened, a decision, or a loose end.",
     )
+
+
+class ReadRoomInput(StrictInput):
+    room: str = Field(
+        ...,
+        min_length=1,
+        max_length=40,
+        description="One memory room: boot, operations, or story.",
+    )
+
+
+class UpdateMemoryInput(StrictInput):
+    title: str = Field(default="会话记录", max_length=80)
+    content: str = Field(..., min_length=1, max_length=4000)
 
 
 class RecallInput(StrictInput):
@@ -180,7 +200,8 @@ def agent_wake(params: WakeInput) -> str:
     The response carries server_time (NTP-synced local clock) so every session
     starts with an authoritative timestamp at zero extra cost.
     """
-    result = json.loads(as_json(wake(resolve_home(), auto_sync=params.auto_sync)))
+    result = json.loads(as_json(wake(resolve_home(), auto_sync=params.auto_sync,
+                                     maintain=params.maintain)))
     from datetime import datetime
     now = datetime.now().astimezone()
     result["server_time"] = {
@@ -213,6 +234,40 @@ def agent_note_today(params: NoteInput) -> str:
     Durable memory still requires agent_propose_memory + explicit confirmation.
     """
     return as_json(note_today(resolve_home(), params.note))
+
+
+@mcp.tool(
+    name=_tool("read_room"),
+    annotations=ToolAnnotations(
+        title="Open One Memory Room",
+        readOnlyHint=True,
+        destructiveHint=False,
+        idempotentHint=True,
+        openWorldHint=False,
+    ),
+)
+def agent_read_room(params: ReadRoomInput) -> str:
+    """Open a memory room that wake left closed: boot, operations, or story."""
+    return as_json(read_room(resolve_home(), params.room))
+
+
+@mcp.tool(
+    name=_tool("update_memory"),
+    annotations=ToolAnnotations(
+        title="Write Short-Term Memory",
+        readOnlyHint=False,
+        destructiveHint=False,
+        idempotentHint=False,
+        openWorldHint=False,
+    ),
+)
+def agent_update_memory(params: UpdateMemoryInput) -> str:
+    """Write one titled section to Brain/Today.md only.
+
+    This tool cannot reach durable rooms. Durable changes require
+    agent_propose_memory + explicit user confirmation.
+    """
+    return as_json(update_today_memory(resolve_home(), params.title, params.content))
 
 
 @mcp.tool(
@@ -359,6 +414,18 @@ def agent_boot_resource() -> str:
 def agent_today_resource() -> str:
     """Return current short-lived Today memory."""
     return read_text(resolve_home(), "Brain/Today.md", max_chars=12_000)
+
+
+@mcp.resource(f"{_TOOL_PREFIX}://operations")
+def agent_operations_resource() -> str:
+    """Return the operations room: memory rules and maintenance contract."""
+    return read_room(resolve_home(), "operations")["text"]
+
+
+@mcp.resource(f"{_TOOL_PREFIX}://story")
+def agent_story_resource() -> str:
+    """Return the story room: continuity, reflection, and history."""
+    return read_room(resolve_home(), "story")["text"]
 
 
 @mcp.prompt(name=_tool("start_session"))

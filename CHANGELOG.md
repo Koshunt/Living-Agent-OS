@@ -1,13 +1,14 @@
-### Unreleased
+# Changelog
 
+## Unreleased
+
+- [feature] Backfill the production room model with generic, de-identified defaults: `config/rooms.json` (boot/operations/story contracts), `<prefix>_read_room` tool and resources, `<prefix>_update_memory` (Today.md only).
+- [docs] AGENTS.md uses `<tool_prefix>_verify` so custom-prefix deployments do not refer to a nonexistent tool; merged duplicate Unreleased sections.
 - Bridge: server.py 支持 AGENT_MCP_TRANSPORT/HOST/PORT 环境变量切换远程传输(streamable-http), 默认 stdio 不变
 - scripts: 新增 precompact_note.py — CC PreCompact 钩子, 上下文压缩前把 transcript 指针写进 Today.md(路径按脚本位置自推导, 任意克隆通用)
 - BootProtocol: 新增"上下文压缩恢复"协议(钩子指针 / recall 纪律 / 归档检索)
 - start_session 引导: 增加"找不到凭证/路径/决定先查记忆再问人"的检索纪律
 
-# Changelog
-
-## Unreleased
 
 - [fix] `daily_rollover.py`: the undated/empty reset branch now snapshots `Today.md` (`undated-{time}.md`) before wiping - a stale `Date:` field plus that branch could silently drop a whole day of notes.
 - [fix] `agent_note_today` and the rollover take a file lock (`Brain/.today.lock`); multiple agent instances on one machine no longer overwrite each other's notes.
@@ -17,9 +18,9 @@
 - [docs] Restore guide now leads with copying the old agent folder and giving the AI a reconnect prompt; explains that `.venv` is machine-specific and must be rebuilt, and that MCP is a local stdio entry per machine.
 - [docs] README quick start now passes name, user, bilingual wake words and tool prefix to the agent; new "rename your companion" section is copy-paste ready.
 - [fix] `init_agent.py` now replaces `{{AGENT_NAME}}` / `{{USER_NAME}}` across every Markdown file under `Brain/` and `MemoryPack/`, not just Identity and WelcomeHome (BootProtocol previously kept raw placeholders).
-- [feature] `init_agent.py --tool-prefix xiaohui` writes `tool_prefix` during setup; unset prefixes default to an ASCII slug of the agent name, else `agent`.
-- [feature] Bilingual wake words: `wake_words` in `Bridge/config.json` accepts any mix of Chinese/English names (e.g. `["小灰","Xiaohui"]`); the generated system prompt tells the companion that every listed name wakes the same identity. `init_agent.py --wake-words "小灰,Xiaohui"` writes it during setup.
-- [feature] Custom MCP tool prefix: `tool_prefix` in `Bridge/config.json` (default `agent`) renames `agent_*` tools to `<prefix>_*` (e.g. `xiaohui_wake`); the generated system prompt is substituted to match.
+- [feature] `init_agent.py --tool-prefix companion` writes `tool_prefix` during setup; unset prefixes default to an ASCII slug of the agent name, else `agent`.
+- [feature] Bilingual wake words: `wake_words` in `Bridge/config.json` accepts any mix of Chinese/English names (e.g. `["Companion","companion"]`); the generated system prompt tells the companion that every listed name wakes the same identity. `init_agent.py --wake-words "Companion,companion"` writes it during setup.
+- [feature] Custom MCP tool prefix: `tool_prefix` in `Bridge/config.json` (default `agent`) renames `agent_*` tools to `<prefix>_*` (e.g. `companion_wake`); the generated system prompt is substituted to match.
 - [feature] Union merge for append-only memory logs via `.gitattributes` (`Brain/Today.md`, `Brain/Living/20*.md`): cross-machine sync keeps both sides' additions instead of whole-file replacement. Docs: `docs/DreamAndSync.md` (union subsection + ops lessons 6-7).
 
 ## v0.2 — 2026-11-17 (backported from a production deployment)

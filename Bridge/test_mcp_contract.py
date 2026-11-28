@@ -18,6 +18,8 @@ class McpContractTests(unittest.TestCase):
             "agent_note_today",
             "agent_recall",
             "agent_read_lines",
+            "agent_read_room",
+            "agent_update_memory",
         ):
             self.assertTrue(callable(getattr(server, name, None)), name)
 
