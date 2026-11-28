@@ -19,7 +19,7 @@
 - **夜间做梦**：`Bridge/dream.py` 每晚把 Today.md 蒸馏进长期记忆（`Brain/Living/{year}.md` 与 `Reflection.md`），归档、重置、自动提交——幂等、失败安全、逐模型重试。**默认关闭**：`config.json` 里 `"dream_enabled": true` 开启；开启后每晚一次轻量 API 调用，空夜零消耗，随时可关。详见 `docs/DreamAndSync.md`。
 - **交班笔**：新 MCP 工具 `<prefix>_note_today`，往 Today.md 追加一行带时间戳的要点（Today 是短期工作记忆，直写；长期记忆仍走提案+确认）。
 - **记忆房间**：`config/rooms.json` 定义 boot / operations / story 三间房的体积契约；`<prefix>_read_room` 按需打开，`<prefix>://operations` / `<prefix>://story` 作为 MCP 资源可直接读取。
-- **短期记忆直写**：`<prefix>_update_memory` 只写 `Brain/Today.md`，结构上无法碰长期房间；长期记忆继续走 `<prefix>_propose_memory` + 用户确认 + `<prefix>_apply_memory`。
+- **短期记忆直写**：`<prefix>_update_memory` 写 `Brain/Today.md`；长期记忆走 `<prefix>_propose_memory` → 用户确认 → `<prefix>_apply_memory`。
 - **完整 MCP 面**：`ping / wake / note_today / recall / read_lines / get_context / git_status / time / verify / start_session / propose_memory / apply_memory / read_room / update_memory`，资源 `boot / today / operations / story`；`wake` 支持 `auto_sync` 与 `maintain`。
 - **记忆检索**：`agent_recall` 全文搜索 Brain/（英文词边界 + 中文 bigram 评分），`agent_read_lines` 打开命中区域——不用翻每个文件就能想起任何事。
 - **增量同步**：`Bridge/sync.sh` 挂 cron 即用（提交 `sync(host): auto` → pull --rebase → push），和做梦机守卫配套组成多机拓扑。
